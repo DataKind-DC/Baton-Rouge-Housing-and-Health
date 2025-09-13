@@ -112,7 +112,7 @@ collect_api_data <- function(base_url, max_rows = 50000, dataset_name = "dataset
 }
 
 # =============================================================================
-# STEP 3: COLLECT DATA FROM BOTH APIs
+# STEP 3: COLLECT DATA FROM ALL APIs
 # =============================================================================
 
 # Collect blight data
@@ -135,41 +135,6 @@ blight <- br_311_data %>%
 blight_data_clean <- blight %>%
   filter(!is.na(longitude) & !is.na(latitude)) %>%
   mutate(dataset_type = "blight")
-
-# Filter and clean permits data
-# TODO: Add specific permit filtering criteria here
-# Examples of potential filters:
-# - Filter by permit type
-# - Filter by date range
-# - Filter by permit status
-# - Filter by construction value thresholds
-
-permits_data_clean <- br_permits_data %>%
-  # PLACEHOLDER: Add your permit filtering criteria here
-  # Example filters (uncomment and modify as needed):
-  # filter(permit_type %in% c("NEW CONSTRUCTION", "RENOVATION", "DEMOLITION")) %>%
-  # filter(issue_date >= as.Date("2020-01-01")) %>%
-  # filter(status == "ISSUED") %>%
-  filter(!is.na(longitude) & !is.na(latitude)) %>%
-  mutate(dataset_type = "permits")
-
-# Create summaries
-blight_summary <- blight_data_clean %>%
-  group_by(typename) %>%
-  summarise(count = n()) %>%
-  arrange(desc(count))
-
-permits_summary <- permits_data_clean %>%
-  # Adjust grouping variable based on actual permits data structure
-  group_by(permit_type = if("permit_type" %in% names(.)) permit_type else "Unknown") %>%
-  summarise(count = n()) %>%
-  arrange(desc(count))
-
-
-unique(br_crime_data$statute_category)
-
-blight <- br_311_data %>%
-  filter(parenttype == "BLIGHTED PROPERTIES")
 
 
 
