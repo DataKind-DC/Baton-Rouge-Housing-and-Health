@@ -1,0 +1,850 @@
+/* Cook County Veterans Map Styles */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow-x: hidden;
+}
+
+html {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.navbar {
+    background-color: #fff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    min-height: 50px;
+    max-height: 60px;
+    z-index: 1050;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Navigation Styles */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #1F2052 !important;
+}
+
+.navbar-text {
+    color: #1F2052 !important;
+    font-size: 0.8rem;
+}
+
+.navbar-nav .nav-link {
+    color: #1F2052 !important;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #2a2d6a !important;
+}
+
+.logo-placeholder {
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-img {
+    border-radius: 6px;
+    height: 50px;
+}
+
+/* Main Layout */
+.main-container {
+    position: relative;
+    display: flex;
+    height: calc(100vh - 60px);
+    width: 100vw;
+    max-width: 100vw;
+    overflow: hidden;
+}
+
+/* Left Sidebar */
+.left-sidebar {
+    width: 33.333%;
+    min-width: 350px;
+    max-width: none;
+    background: white;
+    border-right: 2px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1100;
+    position: relative;
+}
+
+/* Map Container */
+.map-container {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Controls Section */
+.controls-section {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.section-header {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.section-header h6 {
+    margin: 0;
+    color: #333;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Control Buttons */
+.control-buttons {
+    padding: 8px 16px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    background: white;
+    position: relative;
+    z-index: 50;
+    pointer-events: auto;
+}
+
+.control-btn {
+    background: #1F2052;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(31, 32, 82, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    flex: 1;
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.control-btn:hover {
+    background: #2a2d6a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 32, 82, 0.3);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(31, 32, 82, 0.3);
+}
+
+/* Scatter Plot Container (Smaller Section) */
+.scatter-plot-container {
+    flex: 0.75;
+    min-height: 200px;
+    max-height: 280px;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+}
+
+.plot-header {
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.plot-header h6 {
+    margin: 0;
+    color: #333;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.plot-subtitle {
+    margin: 0;
+    color: #333;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.scatter-plot {
+    flex: 1;
+    padding: 2px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Tract Details (Larger Section) */
+.tract-details {
+    flex: 1.25;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.tract-info {
+    flex: 1;
+    padding: 8px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.no-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    text-align: center;
+}
+
+.tract-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #1F2052;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+    font-size: 0.9rem;
+    min-height: 20px;
+    line-height: 1.3;
+    background: #f8f9fa;
+    padding: 10px 12px;
+    margin: -12px -12px 12px -12px;
+}
+
+/* Enhanced tract info styles */
+.tract-summary-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.summary-stat-box {
+    text-align: center;
+    padding: 4px 4px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.summary-stat-box:hover {
+    background: #e9ecef;
+}
+
+.summary-stat-value {
+    font-weight: bold;
+    color: #1F2052;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+    line-height: 1.2;
+}
+
+.inline-rank {
+    font-size: 0.55rem;
+    color: #888;
+    font-style: italic;
+    font-weight: normal;
+    margin-left: 4px;
+}
+
+.summary-stat-label {
+    font-size: 0.65rem;
+    color: #666;
+    line-height: 1.1;
+}
+
+/* Race bar section - full width, no label */
+.race-bar-section {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.race-bar-section #race-chart {
+    width: 100%;
+    height: 20px;
+}
+
+/* Tabbed Interface */
+.tabs-container {
+    margin-top: 6px;
+}
+
+.tabs-header {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: #1F2052;
+    background: #f8f9fa;
+}
+
+.tab-btn.active {
+    color: #1F2052;
+    border-bottom-color: #1F2052;
+}
+
+.tabs-content {
+    position: relative;
+}
+
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.2s ease-in;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chart container styles */
+.chart-section {
+    margin-bottom: 10px;
+}
+
+.chart-title {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.chart-container {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 6px;
+    position: relative;
+}
+
+.chart-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Inline chart layout - title on left, bar on right */
+.inline-chart {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.chart-title-inline {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.65rem;
+    width: 33%;
+    flex-shrink: 0;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.chart-container-inline {
+    width: 67%;
+    height: 20px;
+    position: relative;
+    flex-grow: 1;
+}
+
+.chart-container-inline svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Bar chart styles */
+.bar-segment {
+    cursor: pointer;
+    transition: opacity 0.3s ease, fill 0.3s ease;
+}
+
+.bar-segment:hover {
+    opacity: 0.8;
+}
+
+.bar-label {
+    font-size: 8px;
+    font-weight: 500;
+    fill: #333;
+    text-anchor: middle;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* Tooltip styles */
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    max-width: 200px;
+}
+
+.tooltip.visible {
+    opacity: 1;
+}
+
+/* Map Container */
+.map-container {
+    flex: 1;
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Slide-out Panels - UPDATED FOR THREE COLUMNS */
+.layer-controls-panel,
+.xaxis-controls-panel {
+    position: fixed;
+    left: -55vw; /* Start off-screen, wider panel */
+    top: 60px;
+    width: 55vw; /* Narrower for three compact columns */
+    max-width: 900px; /* Cap the max width */
+    height: calc(100vh - 60px);
+    background: white;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+    z-index: 1050; /* Below sidebar (1100), above legend (900) */
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-left: none;
+}
+
+.layer-controls-panel.open,
+.xaxis-controls-panel.open {
+    left: 33.333%; /* Slide out to just past the sidebar */
+}
+
+/* For smaller sidebars */
+@media (max-width: 1200px) {
+    .layer-controls-panel.open,
+    .xaxis-controls-panel.open {
+        left: 40%; /* Match the sidebar width at this breakpoint */
+    }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.panel-header h5 {
+    margin: 0;
+    color: #333;
+    font-size: 0.85rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #666;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #e9ecef;
+    color: #1F2052;
+}
+
+/* Three Column Container */
+.three-column-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 12px;
+}
+
+.layer-column {
+    min-width: 0; /* Allow columns to shrink */
+}
+
+.column-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1F2052;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #1F2052;
+    text-align: center;
+}
+
+.layer-subgroup {
+    margin-bottom: 12px;
+}
+
+.layer-subgroup h6 {
+    color: #666;
+    margin-bottom: 6px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 2px;
+}
+
+.form-check {
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+    padding: 1px 20px;
+    border-radius: 3px;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+}
+
+.form-check-input:checked {
+    background-color: #1F2052;
+    border-color: #1F2052;
+}
+
+.form-check-label {
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+/* D3 Scatter Plot Styles */
+.scatter-plot svg {
+    width: 100%;
+    height: 100%;
+}
+
+.scatter-circle {
+    stroke: #d0d0d0;
+    stroke-width: 0.5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.scatter-circle:hover {
+    stroke: #1F2052;
+    stroke-width: 2;
+}
+
+.scatter-circle.highlighted {
+    stroke: #1F2052;
+    stroke-width: 2;
+}
+
+.axis {
+    font-size: 7px;
+}
+
+.axis-label {
+    font-size: 8px;
+    font-weight: 600;
+    fill: #333;
+}
+
+.grid-line {
+    stroke: #e9ecef;
+    stroke-width: 1;
+    stroke-dasharray: 2,2;
+}
+
+/* Legend */
+.legend {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px;
+    border-radius: 10px;
+    z-index: 900;
+    min-width: 180px;
+}
+
+/* Map Hover Popup */
+.map-hover-popup .mapboxgl-popup-content {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.map-hover-popup .mapboxgl-popup-tip {
+    border-top-color: rgba(255, 255, 255, 0.5);
+}
+
+.legend-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 12px;
+    margin-right: 6px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Map Highlighting */
+.mapboxgl-canvas {
+    cursor: pointer;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .layer-controls-panel,
+    .xaxis-controls-panel {
+        width: 80vw;
+        left: -80vw;
+    }
+    
+    .three-column-container {
+        gap: 15px;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .left-sidebar {
+        width: 40%;
+        min-width: 320px;
+    }
+    
+    .layer-controls-panel,
+    .xaxis-controls-panel {
+        width: 90vw;
+        left: -90vw;
+    }
+}
+
+@media (max-width: 900px) {
+    .three-column-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .left-sidebar {
+        width: 100%;
+        min-width: auto;
+        height: 50vh;
+        border-right: none;
+        border-bottom: 3px solid #1F2052;
+    }
+    
+    .map-container {
+        height: 50vh;
+    }
+    
+    .layer-controls-panel,
+    .xaxis-controls-panel {
+        width: 100%;
+        left: -100%;
+    }
+    
+    .layer-controls-panel.open,
+    .xaxis-controls-panel.open {
+        left: 0;
+    }
+    
+    .three-column-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .legend {
+        bottom: auto;
+        top: 20px;
+        right: 20px;
+        font-size: 0.7rem;
+    }
+    
+    .tract-summary-stats {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    
+    .control-buttons {
+        flex-direction: row;
+        gap: 6px;
+        padding: 8px 12px;
+    }
+    
+    .control-btn {
+        font-size: 0.65rem;
+        padding: 6px 10px;
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .layer-controls-panel,
+    .xaxis-controls-panel {
+        top: 65px;
+        height: calc(100vh - 65px);
+    }
+    
+    .panel-header,
+    .layer-subgroup {
+        padding: 15px;
+        margin: 15px;
+    }
+    
+    .control-buttons {
+        padding: 10px 15px;
+        gap: 6px;
+    }
+    
+    .control-btn {
+        font-size: 0.7rem;
+        padding: 8px 10px;
+        border-radius: 10px;
+    }
+    
+    .section-header {
+        padding: 12px 15px;
+    }
+    
+    .section-header h6 {
+        font-size: 0.9rem;
+    }
+    
+    .tract-summary-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Accessibility */
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(31, 32, 82, 0.25);
+}
+
+.control-btn:focus,
+.close-btn:focus {
+    outline: 2px solid #1F2052;
+    outline-offset: 2px;
+}
+
+/* Animation for layer transitions */
+.mapboxgl-canvas {
+    transition: opacity 0.3s ease;
+}
+
+/* Custom scrollbar */
+.layer-controls-panel::-webkit-scrollbar,
+.xaxis-controls-panel::-webkit-scrollbar,
+.tract-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+.layer-controls-panel::-webkit-scrollbar-track,
+.xaxis-controls-panel::-webkit-scrollbar-track,
+.tract-info::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.layer-controls-panel::-webkit-scrollbar-thumb,
+.xaxis-controls-panel::-webkit-scrollbar-thumb,
+.tract-info::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.layer-controls-panel::-webkit-scrollbar-thumb:hover,
+.xaxis-controls-panel::-webkit-scrollbar-thumb:hover,
+.tract-info::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

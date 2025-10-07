@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baton Rouge Housing and Health</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Mapbox GL JS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    
+    <!-- D3.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+   
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <div class="logo-placeholder">
+                    <img src="assets/DKDC.png" alt="DKDC Logo" class="logo-img">
+                </div>
+                <span class="navbar-brand mb-0">Baton Rouge Housing and Health</span>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="about.html" style="color: #1F2052 !important; font-weight: 500;">About the Data</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div class="main-container">
+        <!-- Left Sidebar -->
+        <div class="left-sidebar">
+            <!-- Control Buttons -->
+            <div class="controls-section">
+                <div class="control-buttons">
+                    <button id="toggle-layer-controls" class="control-btn">
+                        Choose map layer/y-axis
+                    </button>
+                    <button id="toggle-xaxis-controls" class="control-btn">
+                        Choose x-axis variable
+                    </button>
+                </div>
+            </div>
+            <!-- Tract Details (Now at Top) -->
+            <div class="tract-details">
+                <div id="tract-info" class="tract-info">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+
+            
+
+            <!-- Scatter Plot -->
+            <div class="scatter-plot-container">
+                <div class="plot-header">
+                    <div class="plot-subtitle" id="plot-subtitle">Total Population by Rank</div>
+                </div>
+                <div id="scatter-plot" class="scatter-plot"></div>
+            </div>
+        </div>
+
+        <!-- Layer Controls Panel -->
+        <div id="layer-controls-panel" class="layer-controls-panel">
+            <div class="panel-header">
+                <h5>Map Layer / Y-Axis</h5>
+                <button id="close-layer-controls" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="three-column-container">
+                <!-- Column 1: Demographics -->
+                <div class="layer-column">
+                    <div class="column-title">Demographics</div>
+
+                    <div class="layer-subgroup">
+                        <h6>Population</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="total-population" value="Total_Population" checked>
+                            <label class="form-check-label" for="total-population">Total Population</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Income & Poverty</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="median-income" value="Median_Household_Income">
+                            <label class="form-check-label" for="median-income">Median Household Income</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="poverty-pct" value="Percent_Below_Poverty">
+                            <label class="form-check-label" for="poverty-pct">Below Poverty %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="low-income-pct" value="Percent_Low_Income_Under_35K">
+                            <label class="form-check-label" for="low-income-pct">Low Income %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="high-income-pct" value="Percent_High_Income_100K_Plus">
+                            <label class="form-check-label" for="high-income-pct">High Income %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Race/Ethnicity</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="percent-white" value="Percent_White">
+                            <label class="form-check-label" for="percent-white">White %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="percent-black" value="Percent_Black">
+                            <label class="form-check-label" for="percent-black">Black %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="percent-hispanic" value="Percent_Hispanic">
+                            <label class="form-check-label" for="percent-hispanic">Hispanic %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Households</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="family-households" value="Percent_Family_Households">
+                            <label class="form-check-label" for="family-households">Family Households %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="with-children" value="Percent_Households_With_Children">
+                            <label class="form-check-label" for="with-children">With Children %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="children-poverty" value="Percent_Children_Below_Poverty">
+                            <label class="form-check-label" for="children-poverty">Children in Poverty %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Crime</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="crime-count" value="crime_count">
+                            <label class="form-check-label" for="crime-count">Crime Count</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Housing -->
+                <div class="layer-column">
+                    <div class="column-title">Housing</div>
+
+                    <div class="layer-subgroup">
+                        <h6>Housing Values</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="home-value" value="Median_Home_Value">
+                            <label class="form-check-label" for="home-value">Median Home Value</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="gross-rent" value="Median_Gross_Rent">
+                            <label class="form-check-label" for="gross-rent">Median Gross Rent</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Tenure</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="renter-pct" value="Percent_Renter_Occupied">
+                            <label class="form-check-label" for="renter-pct">Renter %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="owner-pct" value="Percent_Owner_Occupied">
+                            <label class="form-check-label" for="owner-pct">Owner %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="vacancy-rate" value="Percent_Vacant">
+                            <label class="form-check-label" for="vacancy-rate">Vacancy Rate %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Housing Characteristics</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="pre-1980" value="Percent_Built_Pre_1980">
+                            <label class="form-check-label" for="pre-1980">Built Pre-1980 %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="rent-burden-30" value="Percent_High_Rent_Burden_30_Plus">
+                            <label class="form-check-label" for="rent-burden-30">Rent Burden 30%+</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="rent-burden-50" value="Percent_High_Rent_Burden_50_Plus">
+                            <label class="form-check-label" for="rent-burden-50">Rent Burden 50%+</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="poor-perception" value="PNP_Mean_Perc">
+                            <label class="form-check-label" for="poor-perception">Poor Perception %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="poor-conditions" value="PI_Mean_Perc">
+                            <label class="form-check-label" for="poor-conditions">Poor Conditions %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="blight-count" value="blight_count">
+                            <label class="form-check-label" for="blight-count">Blight Count</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="single-family-pct" value="Percent_Single_Family">
+                            <label class="form-check-label" for="single-family-pct">Single-Family %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="two-bedrooms" value="Percent_Two_Plus_Bedrooms">
+                            <label class="form-check-label" for="two-bedrooms">Two+ Bedrooms %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="permits" value="permits_res_count">
+                            <label class="form-check-label" for="permits">Building Permits</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 3: Health -->
+                <div class="layer-column">
+                    <div class="column-title">Health Outcomes</div>
+
+                    <div class="layer-subgroup">
+                        <h6>General Health</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="general-health" value="GENERAL.HEALTH">
+                            <label class="form-check-label" for="general-health">Poor General Health</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="poor-physical" value="POOR.PHYSICAL.HEALTH">
+                            <label class="form-check-label" for="poor-physical">Poor Physical Health</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="poor-mental" value="POOR.MENTAL.HEALTH">
+                            <label class="form-check-label" for="poor-mental">Poor Mental Health</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Chronic Conditions</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="high-bp" value="HIGH.BLOOD.PRESSURE">
+                            <label class="form-check-label" for="high-bp">High Blood Pressure</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="binge-drinking" value="BINGE.DRINKING">
+                            <label class="form-check-label" for="binge-drinking">Binge Drinking</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="cancer" value="CANCER..EXCLUDING.SKIN.CANCER.">
+                            <label class="form-check-label" for="cancer">Cancer</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="asthma" value="ASTHMA">
+                            <label class="form-check-label" for="asthma">Asthma</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="diabetes" value="DIABETES">
+                            <label class="form-check-label" for="diabetes">Diabetes</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="heart-disease" value="CORONARY.HEART.DISEASE">
+                            <label class="form-check-label" for="heart-disease">Coronary Heart Disease</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="obesity" value="OBESITY">
+                            <label class="form-check-label" for="obesity">Obesity</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dataLayer" id="depression" value="DEPRESSION">
+                            <label class="form-check-label" for="depression">Depression</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- X-Axis Controls Panel -->
+        <div id="xaxis-controls-panel" class="xaxis-controls-panel">
+            <div class="panel-header">
+                <h5>X-Axis Variable</h5>
+                <button id="close-xaxis-controls" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="three-column-container">
+                <!-- Column 1: Demographics -->
+                <div class="layer-column">
+                    <div class="column-title">Demographics</div>
+                    
+                    <div class="layer-subgroup">
+                        <h6>Ranking & Population</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-rank" value="rank" checked>
+                            <label class="form-check-label" for="x-rank">Rank (Highest to Lowest)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-total-pop" value="Total_Population">
+                            <label class="form-check-label" for="x-total-pop">Total Population</label>
+                        </div>
+                    </div>
+                    
+                    <div class="layer-subgroup">
+                        <h6>Income & Poverty</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-median-income" value="Median_Household_Income">
+                            <label class="form-check-label" for="x-median-income">Median Household Income</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-poverty-count" value="Below_Poverty_Level">
+                            <label class="form-check-label" for="x-poverty-count">Below Poverty (Count)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-poverty-pct" value="Percent_Below_Poverty">
+                            <label class="form-check-label" for="x-poverty-pct">Below Poverty %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-low-income-pct" value="Percent_Low_Income_Under_35K">
+                            <label class="form-check-label" for="x-low-income-pct">Low Income % (<$35K)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-high-income-pct" value="Percent_High_Income_100K_Plus">
+                            <label class="form-check-label" for="x-high-income-pct">High Income % ($100K+)</label>
+                        </div>
+                    </div>
+                    
+                    <div class="layer-subgroup">
+                        <h6>Race/Ethnicity %</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-percent-white" value="Percent_White">
+                            <label class="form-check-label" for="x-percent-white">White %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-percent-black" value="Percent_Black">
+                            <label class="form-check-label" for="x-percent-black">Black %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-percent-hispanic" value="Percent_Hispanic">
+                            <label class="form-check-label" for="x-percent-hispanic">Hispanic/Latino %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Households</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-family-households" value="Percent_Family_Households">
+                            <label class="form-check-label" for="x-family-households">Family Households %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-households-children" value="Percent_Households_With_Children">
+                            <label class="form-check-label" for="x-households-children">Households With Children %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-children-poverty" value="Percent_Children_Below_Poverty">
+                            <label class="form-check-label" for="x-children-poverty">Children in Poverty %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Crime</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-crime-count" value="crime_count">
+                            <label class="form-check-label" for="x-crime-count">Crime Count</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Housing -->
+                <div class="layer-column">
+                    <div class="column-title">Housing</div>
+
+                    <div class="layer-subgroup">
+                        <h6>Housing Values</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-home-value" value="Median_Home_Value">
+                            <label class="form-check-label" for="x-home-value">Median Home Value</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-gross-rent" value="Median_Gross_Rent">
+                            <label class="form-check-label" for="x-gross-rent">Median Gross Rent</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Tenure</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-renter-pct" value="Percent_Renter_Occupied">
+                            <label class="form-check-label" for="x-renter-pct">Renter %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-owner-pct" value="Percent_Owner_Occupied">
+                            <label class="form-check-label" for="x-owner-pct">Owner %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-vacancy-rate" value="Percent_Vacant">
+                            <label class="form-check-label" for="x-vacancy-rate">Vacancy Rate %</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Housing Characteristics</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-pre-1980" value="Percent_Built_Pre_1980">
+                            <label class="form-check-label" for="x-pre-1980">Built Pre-1980 %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-rent-burden-30" value="Percent_High_Rent_Burden_30_Plus">
+                            <label class="form-check-label" for="x-rent-burden-30">Rent Burden 30%+</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-rent-burden-50" value="Percent_High_Rent_Burden_50_Plus">
+                            <label class="form-check-label" for="x-rent-burden-50">Rent Burden 50%+</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-poor-perception" value="PNP_Mean_Perc">
+                            <label class="form-check-label" for="x-poor-perception">Poor Perception %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-poor-conditions" value="PI_Mean_Perc">
+                            <label class="form-check-label" for="x-poor-conditions">Poor Conditions %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-blight-count" value="blight_count">
+                            <label class="form-check-label" for="x-blight-count">Blight Count</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-single-family-pct" value="Percent_Single_Family">
+                            <label class="form-check-label" for="x-single-family-pct">Single-Family %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-two-bedrooms" value="Percent_Two_Plus_Bedrooms">
+                            <label class="form-check-label" for="x-two-bedrooms">Two+ Bedrooms %</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-permits" value="permits_res_count">
+                            <label class="form-check-label" for="x-permits">Building Permits</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 3: Health -->
+                <div class="layer-column">
+                    <div class="column-title">Health Outcomes</div>
+
+                    <div class="layer-subgroup">
+                        <h6>General Health</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-general-health" value="GENERAL.HEALTH">
+                            <label class="form-check-label" for="x-general-health">Poor General Health</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-poor-physical" value="POOR.PHYSICAL.HEALTH">
+                            <label class="form-check-label" for="x-poor-physical">Poor Physical Health</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-poor-mental" value="POOR.MENTAL.HEALTH">
+                            <label class="form-check-label" for="x-poor-mental">Poor Mental Health</label>
+                        </div>
+                    </div>
+
+                    <div class="layer-subgroup">
+                        <h6>Chronic Conditions</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-high-bp" value="HIGH.BLOOD.PRESSURE">
+                            <label class="form-check-label" for="x-high-bp">High Blood Pressure</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-binge-drinking" value="BINGE.DRINKING">
+                            <label class="form-check-label" for="x-binge-drinking">Binge Drinking</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-cancer" value="CANCER..EXCLUDING.SKIN.CANCER.">
+                            <label class="form-check-label" for="x-cancer">Cancer</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-asthma" value="ASTHMA">
+                            <label class="form-check-label" for="x-asthma">Asthma</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-diabetes" value="DIABETES">
+                            <label class="form-check-label" for="x-diabetes">Diabetes</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-heart-disease" value="CORONARY.HEART.DISEASE">
+                            <label class="form-check-label" for="x-heart-disease">Coronary Heart Disease</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-obesity" value="OBESITY">
+                            <label class="form-check-label" for="x-obesity">Obesity</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="xAxisVar" id="x-depression" value="DEPRESSION">
+                            <label class="form-check-label" for="x-depression">Depression</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map" class="map-container"></div>
+        
+        <!-- Legend -->
+        <div class="legend" id="legend">
+            <div class="legend-title">Legend</div>
+            <div id="legend-content"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

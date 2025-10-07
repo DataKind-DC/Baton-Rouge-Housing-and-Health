@@ -17,13 +17,16 @@ options(tigris_use_cache = TRUE)
 # STEP 1: DEFINE API ENDPOINTS AND PARAMETERS
 # =============================================================================
 
+setwd("C:/Users/RichardCarder/Documents/dev/Baton-Rouge-Housing-and-Health/Input Data")
+
+
 # API endpoints
 blight_url <- "https://data.brla.gov/resource/7ixm-mnvx.csv"
 permits_url <- "https://data.brla.gov/resource/7fq7-8j7r.csv"  # Replace with actual URL
 crime_url<-"https://data.brla.gov/resource/6zc2-imdr.csv"
 
 # Data collection parameters
-max_rows <- 50000
+max_rows <- 100000
 batch_limit <- 1000
 
 # =============================================================================
@@ -119,7 +122,10 @@ collect_api_data <- function(base_url, max_rows = 50000, dataset_name = "dataset
 br_311_data <- collect_api_data(blight_url, max_rows, "blight/311")
 
 # Collect building permits data
-br_permits_data <- collect_api_data(permits_url, max_rows, "building permits")
+#br_permits_data <- collect_api_data(permits_url, max_rows, "building permits")
+
+br_permits_data <- read_csv("EBR_Building_Permits.csv")
+
 
 # Collect building permits data
 br_crime_data <- collect_api_data(crime_url, max_rows, "crime data")
@@ -128,13 +134,41 @@ br_crime_data <- collect_api_data(crime_url, max_rows, "crime data")
 # STEP 4: FILTER AND CLEAN DATASETS
 # =============================================================================
 
+#unique(permits$`PERMIT TYPE`)
+
+
 # Filter and clean blight data
 blight <- br_311_data %>%
   filter(parenttype == "BLIGHTED PROPERTIES")
 
+permits <- br_permits_data %>%
+  mutate(dataset_type = "permits")%>%
+  filter(!is.na(LONGITUDE) & !is.na(LATITUDE)) %>%
+  filter(!str_detect(`PERMIT TYPE`,"Gas Test"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Sign"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Generator"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Stop Work"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Structure Moving"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Cell Tower"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Pool"))%>%
+  filter(!str_detect(`PERMIT TYPE`,"Parking Lot"))
+
 blight_data_clean <- blight %>%
   filter(!is.na(longitude) & !is.na(latitude)) %>%
   mutate(dataset_type = "blight")
+
+crime_data_clean <- br_crime_data %>%
+  filter(!is.na(longitude) & !is.na(latitude)) %>%
+  mutate(dataset_type = "crime")
+
+permit_data_clean_res <- permits %>%
+  filter(DESIGNATION=="Residential")%>%
+  mutate(dataset_type = "permits_res")
+
+permit_data_clean_com <- permits %>%
+  filter(DESIGNATION=="Commercial")%>%
+  mutate(dataset_type = "permits_com")
+
 
 
 
@@ -159,7 +193,13 @@ zip_codes <- zctas(state = "22", year = 2010)
 blight_sf <- blight_data_clean %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-permits_sf <- permits_data_clean %>%
+permits_sf_res <- permit_data_clean_res %>%
+  st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+
+permits_sf_com <- permit_data_clean_com %>%
+  st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+
+crime_sf <- crime_data_clean %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 # Transform reference data to same coordinate system
@@ -169,7 +209,9 @@ zip_codes_transformed <- st_transform(zip_codes, crs = 4326)
 # Create combined buffer to filter ZIP codes to study area
 combined_points <- rbind(
   blight_sf %>% select(dataset_type),
-  permits_sf %>% select(dataset_type)
+  permits_sf_res %>% select(dataset_type),
+  permits_sf_com %>% select(dataset_type),
+  crime_sf %>% select(dataset_type)
 )
 
 study_area_buffer <- st_buffer(st_union(combined_points), dist = 0.1)
@@ -190,14 +232,34 @@ blight_joined <- st_join(blight_with_tracts, zip_codes_br) %>%
     zip_code = ZCTA5CE10
   )
 
-# Join permits data with census tracts and ZIP codes  
-permits_with_tracts <- st_join(permits_sf, census_tracts_transformed)
-permits_joined <- st_join(permits_with_tracts, zip_codes_br) %>%
+# Join res permits data with census tracts and ZIP codes  
+permits_with_tracts_res <- st_join(permits_sf_res, census_tracts_transformed)
+permits_joined_res <- st_join(permits_with_tracts_res, zip_codes_br) %>%
   mutate(
     tract_id = GEOID,
     tract_name = NAMELSAD, 
     zip_code = ZCTA5CE10
   )
+
+# Join com permits data with census tracts and ZIP codes  
+permits_with_tracts_com <- st_join(permits_sf_com, census_tracts_transformed)
+permits_joined_com <- st_join(permits_with_tracts_com, zip_codes_br) %>%
+  mutate(
+    tract_id = GEOID,
+    tract_name = NAMELSAD, 
+    zip_code = ZCTA5CE10
+  )
+
+# Join crime data with census tracts and ZIP codes  
+crime_with_tracts <- st_join(crime_sf, census_tracts_transformed)
+crime_joined <- st_join(crime_with_tracts, zip_codes_br) %>%
+  mutate(
+    tract_id = GEOID,
+    tract_name = NAMELSAD, 
+    zip_code = ZCTA5CE10
+  )
+
+
 
 # =============================================================================
 # STEP 8: CREATE COMBINED SUMMARY TABLES
@@ -209,96 +271,99 @@ cat("Creating summary tables...\n")
 blight_tract_summary <- blight_joined %>%
   st_drop_geometry() %>%
   group_by(tract_id, tract_name) %>%
-  summarise(blight_count = n(), .groups = 'drop')
+  summarise(blight_count = n(), .groups = 'drop')%>%
+  filter(!is.na(tract_id))
 
-permits_tract_summary <- permits_joined %>%
+permits_res_tract_summary <- permits_joined_res %>%
   st_drop_geometry() %>%
   group_by(tract_id, tract_name) %>%
-  summarise(permits_count = n(), .groups = 'drop')
+  summarise(permits_res_count = n(), .groups = 'drop')%>%
+  filter(!is.na(tract_id))
 
-# Create ZIP-level summaries for each dataset
-blight_zip_summary <- blight_joined %>%
+permits_com_tract_summary <- permits_joined_com %>%
   st_drop_geometry() %>%
-  filter(!is.na(zip_code)) %>%
-  group_by(zip_code) %>%
-  summarise(blight_count = n(), .groups = 'drop')
+  group_by(tract_id, tract_name) %>%
+  summarise(permits_com_count = n(), .groups = 'drop')%>%
+  filter(!is.na(tract_id))
 
-permits_zip_summary <- permits_joined %>%
+crime_tract_summary <- crime_joined %>%
   st_drop_geometry() %>%
-  filter(!is.na(zip_code)) %>%
-  group_by(zip_code) %>%
-  summarise(permits_count = n(), .groups = 'drop')
+  group_by(tract_id, tract_name) %>%
+  summarise(crime_count = n(), .groups = 'drop')%>%
+  filter(!is.na(tract_id))
+
 
 # Combine tract summaries
 tract_totals <- census_tracts_transformed %>%
   st_drop_geometry() %>%
   select(tract_id = GEOID, tract_name = NAMELSAD) %>%
   left_join(blight_tract_summary, by = c("tract_id", "tract_name")) %>%
-  left_join(permits_tract_summary, by = c("tract_id", "tract_name")) %>%
+  left_join(permits_res_tract_summary, by = c("tract_id", "tract_name")) %>%
+  left_join(permits_com_tract_summary, by = c("tract_id", "tract_name")) %>%
+  left_join(crime_tract_summary, by = c("tract_id", "tract_name")) %>%
   mutate(
     blight_count = coalesce(blight_count, 0),
-    permits_count = coalesce(permits_count, 0),
-    total_incidents = blight_count + permits_count
-  ) %>%
-  arrange(desc(total_incidents))
+    permits_res_count = coalesce(permits_res_count, 0),
+    permits_com_count = coalesce(permits_com_count, 0),
+    crime_count = coalesce(crime_count, 0))
 
-# Combine ZIP summaries
-zip_totals <- zip_codes_br %>%
-  st_drop_geometry() %>%
-  select(zip_code = ZCTA5CE10) %>%
-  left_join(blight_zip_summary, by = "zip_code") %>%
-  left_join(permits_zip_summary, by = "zip_code") %>%
-  mutate(
-    blight_count = coalesce(blight_count, 0),
-    permits_count = coalesce(permits_count, 0),
-    total_incidents = blight_count + permits_count
-  ) %>%
-  arrange(desc(total_incidents))
-
-# Detailed breakdowns by type
-tract_type_summary_blight <- blight_joined %>%
-  st_drop_geometry() %>%
-  group_by(tract_id, tract_name, typename) %>%
-  summarise(count = n(), .groups = 'drop') %>%
-  mutate(dataset = "blight") %>%
-  arrange(tract_id, desc(count))
-
-tract_type_summary_permits <- permits_joined %>%
-  st_drop_geometry() %>%
-  group_by(tract_id, tract_name, 
-           type_name = if("permit_type" %in% names(.)) permit_type else "Unknown") %>%
-  summarise(count = n(), .groups = 'drop') %>%
-  mutate(dataset = "permits") %>%
-  rename(typename = type_name) %>%
-  arrange(tract_id, desc(count))
-
-# Combine detailed summaries
-tract_type_summary_combined <- bind_rows(
-  tract_type_summary_blight,
-  tract_type_summary_permits
-)
-
-# Similar for ZIP codes
-zip_type_summary_blight <- blight_joined %>%
-  st_drop_geometry() %>%
-  filter(!is.na(zip_code)) %>%
-  group_by(zip_code, typename) %>%
-  summarise(count = n(), .groups = 'drop') %>%
-  mutate(dataset = "blight")
-
-zip_type_summary_permits <- permits_joined %>%
-  st_drop_geometry() %>%
-  filter(!is.na(zip_code)) %>%
-  group_by(zip_code, 
-           type_name = if("permit_type" %in% names(.)) permit_type else "Unknown") %>%
-  summarise(count = n(), .groups = 'drop') %>%
-  mutate(dataset = "permits") %>%
-  rename(typename = type_name)
-
-zip_type_summary_combined <- bind_rows(
-  zip_type_summary_blight,
-  zip_type_summary_permits
-)
+# # Combine ZIP summaries
+# zip_totals <- zip_codes_br %>%
+#   st_drop_geometry() %>%
+#   select(zip_code = ZCTA5CE10) %>%
+#   left_join(blight_zip_summary, by = "zip_code") %>%
+#   left_join(permits_zip_summary, by = "zip_code") %>%
+#   mutate(
+#     blight_count = coalesce(blight_count, 0),
+#     permits_count = coalesce(permits_count, 0),
+#     total_incidents = blight_count + permits_count
+#   ) %>%
+#   arrange(desc(total_incidents))
+# 
+# # Detailed breakdowns by type
+# tract_type_summary_blight <- blight_joined %>%
+#   st_drop_geometry() %>%
+#   group_by(tract_id, tract_name, typename) %>%
+#   summarise(count = n(), .groups = 'drop') %>%
+#   mutate(dataset = "blight") %>%
+#   arrange(tract_id, desc(count))
+# 
+# tract_type_summary_permits <- permits_joined %>%
+#   st_drop_geometry() %>%
+#   group_by(tract_id, tract_name, 
+#            type_name = if("permit_type" %in% names(.)) permit_type else "Unknown") %>%
+#   summarise(count = n(), .groups = 'drop') %>%
+#   mutate(dataset = "permits") %>%
+#   rename(typename = type_name) %>%
+#   arrange(tract_id, desc(count))
+# 
+# # Combine detailed summaries
+# tract_type_summary_combined <- bind_rows(
+#   tract_type_summary_blight,
+#   tract_type_summary_permits
+# )
+# 
+# # Similar for ZIP codes
+# zip_type_summary_blight <- blight_joined %>%
+#   st_drop_geometry() %>%
+#   filter(!is.na(zip_code)) %>%
+#   group_by(zip_code, typename) %>%
+#   summarise(count = n(), .groups = 'drop') %>%
+#   mutate(dataset = "blight")
+# 
+# zip_type_summary_permits <- permits_joined %>%
+#   st_drop_geometry() %>%
+#   filter(!is.na(zip_code)) %>%
+#   group_by(zip_code, 
+#            type_name = if("permit_type" %in% names(.)) permit_type else "Unknown") %>%
+#   summarise(count = n(), .groups = 'drop') %>%
+#   mutate(dataset = "permits") %>%
+#   rename(typename = type_name)
+# 
+# zip_type_summary_combined <- bind_rows(
+#   zip_type_summary_blight,
+#   zip_type_summary_permits
+# )
 
 # =============================================================================
 # STEP 9: SAVE RESULTS
@@ -306,9 +371,12 @@ zip_type_summary_combined <- bind_rows(
 
 cat("Saving results...\n")
 
+setwd("C:/Users/RichardCarder/Documents/dev/Baton-Rouge-Housing-and-Health/Input Data")
+
+
 # Save main summary tables with both datasets
-write.csv(tract_totals, "tract_totals_combined.csv", row.names = FALSE)
-write.csv(zip_totals, "zip_totals_combined.csv", row.names = FALSE)
+write.csv(tract_totals, "OpenBR_Tract_Totals.csv", row.names = FALSE)
+#write.csv(zip_totals, "zip_totalTracts_combined.csv", row.names = FALSE)
 
 # Save detailed breakdowns
 write.csv(tract_type_summary_combined, "tract_type_summary_combined.csv", row.names = FALSE)

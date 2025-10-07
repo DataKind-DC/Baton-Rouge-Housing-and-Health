@@ -11,7 +11,7 @@ setwd("C:/Users/RichardCarder/Documents/dev/Baton-Rouge-Housing-and-Health/Outpu
 
 # Set up Census API
 API_Key <- Sys.getenv("CENSUS_API_KEY")
-census_api_key(API_Key, install = TRUE, overwrite = TRUE)
+#census_api_key(API_Key, install = TRUE, overwrite = TRUE)
 
 # Test API connectivity
 cat("Testing Census API connectivity...\n")
