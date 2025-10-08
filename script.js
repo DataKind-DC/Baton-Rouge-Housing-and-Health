@@ -38,6 +38,8 @@ let originalMapView = null;
 let parishTotals = null;
 let tractRankings = null;
 let mapPopup = null;
+let gridScatterPlots = [];
+let currentScatterCategory = 'demographics';
 
 // Data layer configurations
 const layerConfig = {
@@ -96,7 +98,8 @@ function setupUI() {
     setTimeout(() => {
         const layerBtn = document.getElementById('toggle-layer-controls');
         const xAxisBtn = document.getElementById('toggle-xaxis-controls');
-        
+        const scatterplotsBtn = document.getElementById('toggle-scatterplots');
+
         if (layerBtn) {
             layerBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -104,6 +107,7 @@ function setupUI() {
                 const layerPanel = document.getElementById('layer-controls-panel');
                 const xAxisPanel = document.getElementById('xaxis-controls-panel');
                 xAxisPanel.classList.remove('open');
+                // DO NOT close scatterplots panel when layer button is clicked
                 layerPanel.classList.toggle('open');
             });
         }
@@ -115,13 +119,37 @@ function setupUI() {
                 const layerPanel = document.getElementById('layer-controls-panel');
                 const xAxisPanel = document.getElementById('xaxis-controls-panel');
                 layerPanel.classList.remove('open');
+                // DO NOT close scatterplots panel when x-axis button is clicked
                 xAxisPanel.classList.toggle('open');
+            });
+        }
+
+        if (scatterplotsBtn) {
+            scatterplotsBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const layerPanel = document.getElementById('layer-controls-panel');
+                const xAxisPanel = document.getElementById('xaxis-controls-panel');
+                const scatterplotsPanel = document.getElementById('scatterplots-panel');
+                layerPanel.classList.remove('open');
+                xAxisPanel.classList.remove('open');
+
+                const isOpening = !scatterplotsPanel.classList.contains('open');
+                scatterplotsPanel.classList.toggle('open');
+
+                // If opening the panel and there's a frozen selection, highlight it in all plots
+                if (isOpening && isFrozen && currentHoveredFeature) {
+                    setTimeout(() => {
+                        highlightBubbleInAllPlots(currentHoveredFeature);
+                    }, 100);
+                }
             });
         }
 
         const closeLayerBtn = document.getElementById('close-layer-controls');
         const closeXAxisBtn = document.getElementById('close-xaxis-controls');
-        
+        const closeScatterplotsBtn = document.getElementById('close-scatterplots');
+
         if (closeLayerBtn) {
             closeLayerBtn.addEventListener('click', function() {
                 document.getElementById('layer-controls-panel').classList.remove('open');
@@ -133,19 +161,30 @@ function setupUI() {
                 document.getElementById('xaxis-controls-panel').classList.remove('open');
             });
         }
+
+        if (closeScatterplotsBtn) {
+            closeScatterplotsBtn.addEventListener('click', function() {
+                document.getElementById('scatterplots-panel').classList.remove('open');
+            });
+        }
     }, 100);
 
     document.addEventListener('click', function(e) {
         const layerPanel = document.getElementById('layer-controls-panel');
         const xAxisPanel = document.getElementById('xaxis-controls-panel');
+        const scatterplotsPanel = document.getElementById('scatterplots-panel');
         const layerBtn = document.getElementById('toggle-layer-controls');
         const xAxisBtn = document.getElementById('toggle-xaxis-controls');
-        
+        const scatterplotsBtn = document.getElementById('toggle-scatterplots');
+
+        // Only close layer and xaxis panels on outside click (not scatterplots panel)
         if (!layerPanel.contains(e.target) && !layerBtn.contains(e.target) &&
             !xAxisPanel.contains(e.target) && !xAxisBtn.contains(e.target) &&
+            !scatterplotsPanel.contains(e.target) && !scatterplotsBtn.contains(e.target) &&
             !e.target.closest('.control-btn')) {
             layerPanel.classList.remove('open');
             xAxisPanel.classList.remove('open');
+            // Note: scatterplots panel is NOT closed here - only closes with X button
         }
     });
 }
@@ -159,6 +198,7 @@ async function loadData() {
         calculateRankings();
         initializeMap();
         initializeScatterPlot();
+        initializeScatterplotsPanel();
 
         // Initialize the tract details with parish totals
         // Need to render the DOM first, then populate with data
@@ -344,6 +384,9 @@ function setupEventListeners() {
             if (this.checked) {
                 currentXAxis = this.value;
                 updateScatterPlot();
+                updateScatterplotsXAxis(); // Update grid scatterplots x-axis
+
+                // Always close the x-axis panel (scatterplots panel stays open independently)
                 document.getElementById('xaxis-controls-panel').classList.remove('open');
             }
         });
@@ -780,6 +823,18 @@ function setupTabs() {
             // Add active class to clicked button and corresponding pane
             button.classList.add('active');
             document.getElementById(`tab-${targetTab}`).classList.add('active');
+
+            // Sync with scatterplots panel tabs
+            currentScatterCategory = targetTab;
+            const scatterTabButtons = document.querySelectorAll('.scatterplots-tab-btn');
+            scatterTabButtons.forEach(btn => {
+                if (btn.getAttribute('data-scatter-category') === targetTab) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            showScatterplotsForCategory(targetTab);
 
             // Re-render demographics charts when demographics tab is activated
             if (targetTab === 'demographics') {
@@ -1502,6 +1557,21 @@ function formatValue(value, isPercentage, property) {
 
 function initializeScatterPlot() {
     scatterPlot = new ScatterPlot('scatter-plot', demographicsData, currentLayer, currentXAxis);
+
+    // Add click handler to sidebar scatter plot for unfreezing when clicking outside bubbles
+    setTimeout(() => {
+        const sidebarPlotContainer = document.getElementById('scatter-plot');
+        if (sidebarPlotContainer) {
+            sidebarPlotContainer.addEventListener('click', function(e) {
+                // If clicked directly on the container (not on a bubble), unfreeze
+                if (e.target === this || e.target.tagName === 'svg') {
+                    if (isFrozen) {
+                        unfreeze();
+                    }
+                }
+            });
+        }
+    }, 150);
 }
 
 function updateScatterPlot() {
@@ -1510,6 +1580,286 @@ function updateScatterPlot() {
         const subtitle = document.getElementById('plot-subtitle');
         const xAxisLabel = currentXAxis === 'rank' ? 'Rank' : (layerConfig[currentXAxis]?.label || currentXAxis);
         subtitle.textContent = `${layerConfig[currentLayer]?.label || currentLayer} by ${xAxisLabel}`;
+    }
+}
+
+function highlightBubbleInAllPlots(geoid) {
+    if (!geoid) return;
+
+    // Highlight in sidebar plot
+    if (scatterPlot && scatterPlot.highlightBubble) {
+        try {
+            scatterPlot.highlightBubble(geoid);
+        } catch (e) {
+            console.warn('Error highlighting in sidebar plot:', e);
+        }
+    }
+
+    // Highlight in all grid plots
+    if (Array.isArray(gridScatterPlots)) {
+        gridScatterPlots.forEach(plot => {
+            if (plot && plot.highlightBubble) {
+                try {
+                    plot.highlightBubble(geoid);
+                } catch (e) {
+                    console.warn('Error highlighting in grid plot:', e);
+                }
+            }
+        });
+    }
+}
+
+function clearHighlightInAllPlots() {
+    // Clear in sidebar plot
+    if (scatterPlot && scatterPlot.clearHighlight) {
+        try {
+            scatterPlot.clearHighlight();
+            if (scatterPlot.reorderBubbles) {
+                scatterPlot.reorderBubbles();
+            }
+        } catch (e) {
+            console.warn('Error clearing highlight in sidebar plot:', e);
+        }
+    }
+
+    // Clear in all grid plots
+    if (Array.isArray(gridScatterPlots)) {
+        gridScatterPlots.forEach(plot => {
+            if (plot && plot.clearHighlight) {
+                try {
+                    plot.clearHighlight();
+                    if (plot.reorderBubbles) {
+                        plot.reorderBubbles();
+                    }
+                } catch (e) {
+                    console.warn('Error clearing highlight in grid plot:', e);
+                }
+            }
+        });
+    }
+}
+
+function initializeScatterplotsPanel() {
+    // Create all plots once at initialization
+    createAllScatterplots();
+
+    // Setup tab switching
+    const tabButtons = document.querySelectorAll('.scatterplots-tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const category = button.getAttribute('data-scatter-category');
+
+            // Update active tab in scatterplots panel
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // Sync with sidebar tabs
+            currentScatterCategory = category;
+            const sidebarTabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            sidebarTabButtons.forEach(btn => {
+                if (btn.getAttribute('data-tab') === category) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            tabPanes.forEach(pane => {
+                if (pane.id === `tab-${category}`) {
+                    pane.classList.add('active');
+                } else {
+                    pane.classList.remove('active');
+                }
+            });
+
+            // Re-render sidebar charts for the selected category
+            const currentProperties = window.currentTractProperties || parishTotals;
+            if (category === 'demographics') {
+                createMedianIncomeChart(currentProperties);
+                createBelowPovertyChart(currentProperties);
+                createLowIncomeChart(currentProperties);
+                createHighIncomeChart(currentProperties);
+                createWhiteChart(currentProperties);
+                createBlackChart(currentProperties);
+                createHispanicChart(currentProperties);
+                createFamilyHouseholdsChart(currentProperties);
+                createHouseholdsWithChildrenChart(currentProperties);
+                createChildrenPovertyChart(currentProperties);
+                createCrimeCountChart(currentProperties);
+            } else if (category === 'housing') {
+                createMedianHomeValueChart(currentProperties);
+                createMedianRentChart(currentProperties);
+                createRenterPctChart(currentProperties);
+                createPre1980Chart(currentProperties);
+                createRentBurden30Chart(currentProperties);
+                createPNPChart(currentProperties);
+                createPIChart(currentProperties);
+                createBlightCountChart(currentProperties);
+                createSingleFamilyPctChart(currentProperties);
+                createTwoPlusBedroomsChart(currentProperties);
+                createPermitsChart(currentProperties);
+            } else if (category === 'health') {
+                createGeneralHealthChart(currentProperties);
+                createPoorPhysicalHealthChart(currentProperties);
+                createPoorMentalHealthChart(currentProperties);
+                createHighBloodPressureChart(currentProperties);
+                createBingeDrinkingChart(currentProperties);
+                createCancerChart(currentProperties);
+                createAsthmaChart(currentProperties);
+                createDiabetesChart(currentProperties);
+                createCoronaryHeartDiseaseChart(currentProperties);
+                createObesityChart(currentProperties);
+                createDepressionChart(currentProperties);
+            }
+
+            // Show/hide scatterplots based on category
+            showScatterplotsForCategory(category);
+        });
+    });
+
+    // Initial visibility
+    showScatterplotsForCategory(currentScatterCategory);
+}
+
+function createAllScatterplots() {
+    const grid = document.querySelector('.scatterplots-grid');
+    if (!grid) return;
+
+    // Define variables by category
+    const variablesByCategory = {
+        demographics: [
+            { var: 'Total_Population', label: 'Total Population', category: 'demographics' },
+            { var: 'Median_Household_Income', label: 'Median Household Income', category: 'demographics' },
+            { var: 'Percent_Below_Poverty', label: 'Below Poverty %', category: 'demographics' },
+            { var: 'Percent_Low_Income_Under_35K', label: 'Low Income %', category: 'demographics' },
+            { var: 'Percent_High_Income_100K_Plus', label: 'High Income %', category: 'demographics' },
+            { var: 'Percent_White', label: 'White %', category: 'demographics' },
+            { var: 'Percent_Black', label: 'Black %', category: 'demographics' },
+            { var: 'Percent_Hispanic', label: 'Hispanic %', category: 'demographics' },
+            { var: 'Percent_Family_Households', label: 'Family Households %', category: 'demographics' },
+            { var: 'Percent_Households_With_Children', label: 'With Children %', category: 'demographics' },
+            { var: 'Percent_Children_Below_Poverty', label: 'Children in Poverty %', category: 'demographics' },
+            { var: 'crime_count', label: 'Crime Count', category: 'demographics' }
+        ],
+        housing: [
+            { var: 'Median_Home_Value', label: 'Median Home Value', category: 'housing' },
+            { var: 'Median_Gross_Rent', label: 'Median Gross Rent', category: 'housing' },
+            { var: 'Percent_Renter_Occupied', label: 'Renter %', category: 'housing' },
+            { var: 'Percent_Owner_Occupied', label: 'Owner %', category: 'housing' },
+            { var: 'Percent_Vacant', label: 'Vacancy Rate %', category: 'housing' },
+            { var: 'Percent_Built_Pre_1980', label: 'Built Pre-1980 %', category: 'housing' },
+            { var: 'Percent_High_Rent_Burden_30_Plus', label: 'Rent Burden 30%+', category: 'housing' },
+            { var: 'Percent_High_Rent_Burden_50_Plus', label: 'Rent Burden 50%+', category: 'housing' },
+            { var: 'PNP_Mean_Perc', label: 'Poor Perception %', category: 'housing' },
+            { var: 'PI_Mean_Perc', label: 'Poor Conditions %', category: 'housing' },
+            { var: 'blight_count', label: 'Blight Count', category: 'housing' },
+            { var: 'Percent_Single_Family', label: 'Single-Family %', category: 'housing' },
+            { var: 'Percent_Two_Plus_Bedrooms', label: 'Two+ Bedrooms %', category: 'housing' },
+            { var: 'permits_res_count', label: 'Building Permits', category: 'housing' }
+        ],
+        health: [
+            { var: 'GENERAL.HEALTH', label: 'Poor General Health', category: 'health' },
+            { var: 'POOR.PHYSICAL.HEALTH', label: 'Poor Physical Health', category: 'health' },
+            { var: 'POOR.MENTAL.HEALTH', label: 'Poor Mental Health', category: 'health' },
+            { var: 'HIGH.BLOOD.PRESSURE', label: 'High Blood Pressure', category: 'health' },
+            { var: 'BINGE.DRINKING', label: 'Binge Drinking', category: 'health' },
+            { var: 'CANCER..EXCLUDING.SKIN.CANCER.', label: 'Cancer', category: 'health' },
+            { var: 'ASTHMA', label: 'Asthma', category: 'health' },
+            { var: 'DIABETES', label: 'Diabetes', category: 'health' },
+            { var: 'CORONARY.HEART.DISEASE', label: 'Coronary Heart Disease', category: 'health' },
+            { var: 'OBESITY', label: 'Obesity', category: 'health' },
+            { var: 'DEPRESSION', label: 'Depression', category: 'health' }
+        ]
+    };
+
+    // Clear existing content and plots
+    grid.innerHTML = '';
+    gridScatterPlots = [];
+
+    // Get x-axis label
+    const xAxisLabel = currentXAxis === 'rank' ? 'Rank' : (layerConfig[currentXAxis]?.label || currentXAxis);
+
+    // Create ALL scatterplots from all categories
+    let plotIndex = 0;
+    Object.keys(variablesByCategory).forEach(category => {
+        variablesByCategory[category].forEach((varConfig) => {
+            const item = document.createElement('div');
+            item.className = 'scatterplot-item';
+            item.setAttribute('data-category', varConfig.category);
+
+            const title = document.createElement('div');
+            title.className = 'scatterplot-item-title';
+            title.textContent = `${varConfig.label} vs ${xAxisLabel}`;
+
+            const container = document.createElement('div');
+            container.className = 'scatterplot-item-container';
+            container.id = `scatterplot-grid-${plotIndex}`;
+
+            item.appendChild(title);
+            item.appendChild(container);
+            grid.appendChild(item);
+
+            // Create the scatter plot instance and store it with category info
+            const plot = new ScatterPlot(`scatterplot-grid-${plotIndex}`, demographicsData, varConfig.var, currentXAxis);
+            plot.category = varConfig.category;
+            plot.varConfig = varConfig;
+            plot.titleElement = title;
+            gridScatterPlots.push(plot);
+
+            // Add click handler for unfreezing when clicking outside bubbles
+            container.addEventListener('click', function(e) {
+                if (e.target === this || e.target.tagName === 'svg') {
+                    if (isFrozen) {
+                        unfreeze();
+                    }
+                }
+            });
+
+            plotIndex++;
+        });
+    });
+
+    // If there's a frozen selection, restore it in all plots
+    if (isFrozen && currentHoveredFeature) {
+        setTimeout(() => {
+            highlightBubbleInAllPlots(currentHoveredFeature);
+        }, 100);
+    }
+}
+
+function showScatterplotsForCategory(category) {
+    const items = document.querySelectorAll('.scatterplot-item');
+    items.forEach(item => {
+        if (item.getAttribute('data-category') === category) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function updateScatterplotsXAxis() {
+    // Get x-axis label
+    const xAxisLabel = currentXAxis === 'rank' ? 'Rank' : (layerConfig[currentXAxis]?.label || currentXAxis);
+
+    // Update all plots with new x-axis
+    gridScatterPlots.forEach(plot => {
+        if (plot && plot.updateLayer) {
+            plot.updateLayer(plot.currentLayer, currentXAxis);
+            // Update title
+            if (plot.titleElement && plot.varConfig) {
+                plot.titleElement.textContent = `${plot.varConfig.label} vs ${xAxisLabel}`;
+            }
+        }
+    });
+
+    // If there's a frozen selection, restore it
+    if (isFrozen && currentHoveredFeature) {
+        setTimeout(() => {
+            highlightBubbleInAllPlots(currentHoveredFeature);
+        }, 100);
     }
 }
 
@@ -1649,29 +1999,49 @@ class ScatterPlot {
     
     handleBubbleClick(data) {
         if (isFrozen && data.GEOID === currentHoveredFeature) {
+            // Clicking the same frozen bubble unfreezes
             unfreeze();
         } else {
+            // Clicking a different bubble (whether frozen or not)
             const feature = demographicsData.features.find(f => f.properties.GEOID === data.GEOID);
             if (feature) {
+                // If already frozen on another bubble, clear all highlights first
+                if (isFrozen) {
+                    clearHighlightInAllPlots();
+                    clearMapHighlight();
+                    isFrozen = false;
+                    currentHoveredFeature = null;
+                }
+                // Then freeze on the new bubble
                 freeze(data);
                 zoomToTract(feature);
+                // Ensure highlights are applied to all plots
+                setTimeout(() => {
+                    highlightBubbleInAllPlots(data.GEOID);
+                }, 50);
             }
         }
     }
     
     handleBubbleHover(data) {
         if (isFrozen) return;
+        // Highlight in this plot
         this.g.selectAll('.scatter-circle').classed('highlighted', false);
         this.g.selectAll('.scatter-circle').filter(d => d.GEOID === data.GEOID)
             .classed('highlighted', true).raise();
+
+        // Highlight in all other plots
+        highlightBubbleInAllPlots(data.GEOID);
+
         updateTractDetails(data);
         currentHoveredFeature = data.GEOID;
         highlightMapFeature(data.GEOID);
     }
-    
+
     handleBubbleLeave() {
         if (isFrozen) return;
         this.clearHighlight();
+        clearHighlightInAllPlots();
         showParishTotals();
         clearMapHighlight();
         currentHoveredFeature = null;
@@ -1679,13 +2049,23 @@ class ScatterPlot {
     }
     
     highlightBubble(geoid) {
-        this.g.selectAll('.scatter-circle').classed('highlighted', false);
-        this.g.selectAll('.scatter-circle').filter(d => d.GEOID === geoid)
-            .classed('highlighted', true).raise();
+        if (!this.g || !geoid) return;
+        try {
+            this.g.selectAll('.scatter-circle').classed('highlighted', false);
+            this.g.selectAll('.scatter-circle').filter(d => d && d.GEOID === geoid)
+                .classed('highlighted', true).raise();
+        } catch (e) {
+            console.warn('Error in highlightBubble:', e);
+        }
     }
-    
+
     clearHighlight() {
-        this.g.selectAll('.scatter-circle').classed('highlighted', false);
+        if (!this.g) return;
+        try {
+            this.g.selectAll('.scatter-circle').classed('highlighted', false);
+        } catch (e) {
+            console.warn('Error in clearHighlight:', e);
+        }
     }
     
     reorderBubbles() {

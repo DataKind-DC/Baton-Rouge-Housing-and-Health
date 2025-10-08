@@ -470,7 +470,7 @@ html {
     height: calc(100vh - 60px);
     background: white;
     box-shadow: 2px 0 15px rgba(0,0,0,0.1);
-    z-index: 1050; /* Below sidebar (1100), above legend (900) */
+    z-index: 1070; /* Above scatterplots (1060), below sidebar (1100) */
     transition: left 0.3s ease;
     overflow-y: auto;
     border: 1px solid #e9ecef;
@@ -482,11 +482,151 @@ html {
     left: 33.333%; /* Slide out to just past the sidebar */
 }
 
+/* Scatterplots Panel - Full width from sidebar edge to screen edge */
+.scatterplots-panel {
+    position: fixed;
+    left: 100vw; /* Start off-screen to the right */
+    top: 60px;
+    width: 66.667vw; /* Full width minus sidebar */
+    height: calc(100vh - 60px);
+    background: white;
+    box-shadow: -2px 0 15px rgba(0,0,0,0.1);
+    z-index: 1060; /* Above legend (900), below layer/x-axis panels (1070) and sidebar (1100) */
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-right: none;
+}
+
+.scatterplots-panel.open {
+    left: 33.333%; /* Slide out to just past the sidebar */
+}
+
+/* Info Icon and Tooltip */
+.info-icon-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-icon {
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.info-icon:hover {
+    transform: scale(1.1);
+}
+
+.info-tooltip {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+    background: rgba(31, 32, 82, 0.95);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    white-space: nowrap;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.info-icon-container:hover .info-tooltip {
+    display: block;
+}
+
+.info-tooltip strong {
+    color: #fff;
+    display: block;
+    margin-bottom: 6px;
+}
+
+/* Scatterplots Category Tabs */
+.scatterplots-tabs-header {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e9ecef;
+    padding: 0 20px;
+    background: #f8f9fa;
+}
+
+.scatterplots-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s ease;
+}
+
+.scatterplots-tab-btn:hover {
+    color: #1F2052;
+    background: #fff;
+}
+
+.scatterplots-tab-btn.active {
+    color: #1F2052;
+    border-bottom-color: #1F2052;
+    background: #fff;
+}
+
+/* Scatterplots Grid */
+.scatterplots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.scatterplot-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+.scatterplot-item-title {
+    font-weight: 600;
+    color: #1F2052;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.scatterplot-item-container {
+    flex: 1;
+    min-height: 200px;
+    position: relative;
+}
+
 /* For smaller sidebars */
 @media (max-width: 1200px) {
     .layer-controls-panel.open,
     .xaxis-controls-panel.open {
         left: 40%; /* Match the sidebar width at this breakpoint */
+    }
+
+    .scatterplots-panel {
+        width: 60vw;
+    }
+
+    .scatterplots-panel.open {
+        left: 40%;
     }
 }
 
@@ -734,10 +874,25 @@ html {
         width: 100%;
         left: -100%;
     }
-    
+
     .layer-controls-panel.open,
     .xaxis-controls-panel.open {
         left: 0;
+    }
+
+    .scatterplots-panel {
+        width: 100%;
+        left: 100%;
+    }
+
+    .scatterplots-panel.open {
+        left: 0;
+    }
+
+    .scatterplots-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 15px;
     }
     
     .three-column-container {

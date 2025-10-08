@@ -42,10 +42,13 @@
             <div class="controls-section">
                 <div class="control-buttons">
                     <button id="toggle-layer-controls" class="control-btn">
-                        Choose map layer/y-axis
+                        Choose Map Layer
                     </button>
                     <button id="toggle-xaxis-controls" class="control-btn">
                         Choose x-axis variable
+                    </button>
+                    <button id="toggle-scatterplots" class="control-btn">
+                        Show Scatterplots
                     </button>
                 </div>
             </div>
@@ -498,6 +501,40 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Scatterplots Panel -->
+        <div id="scatterplots-panel" class="scatterplots-panel">
+            <div class="panel-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h5>Scatterplot Analysis</h5>
+                    <div class="info-icon-container">
+                        <svg class="info-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="8" r="7" stroke="#666" stroke-width="1.5"/>
+                            <path d="M8 7V11M8 5V5.5" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <div class="info-tooltip">
+                            <strong>How to use:</strong><br>
+                            • Change X-axis using "Choose x-axis variable" button<br>
+                            • Switch categories using tabs below<br>
+                            • Hover over any bubble to highlight across all plots<br>
+                            • Click any bubble to select that census tract
+                        </div>
+                    </div>
+                </div>
+                <button id="close-scatterplots" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="scatterplots-tabs-header">
+                <button class="scatterplots-tab-btn active" data-scatter-category="demographics">Demographics</button>
+                <button class="scatterplots-tab-btn" data-scatter-category="housing">Housing</button>
+                <button class="scatterplots-tab-btn" data-scatter-category="health">Health</button>
+            </div>
+
+            <div class="scatterplots-grid">
+                <!-- Scatter plots will be dynamically created here -->
             </div>
         </div>
 
