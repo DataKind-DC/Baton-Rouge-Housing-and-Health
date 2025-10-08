@@ -45,7 +45,7 @@ let currentScatterCategory = 'demographics';
 const layerConfig = {
     // Demographics
     'Total_Population': { label: 'Total Population', type: 'count', category: 'demographics' },
-    'Median_Household_Income': { label: 'Median Household Income', type: 'count', category: 'demographics' },
+    'Median_Household_Income': { label: 'Median Household Income', type: 'currency', category: 'demographics' },
     'Percent_Below_Poverty': { label: 'Below Poverty %', type: 'percentage', category: 'demographics' },
     'Percent_Low_Income_Under_35K': { label: 'Low Income % (<$35K)', type: 'percentage', category: 'demographics' },
     'Percent_High_Income_100K_Plus': { label: 'High Income % ($100K+)', type: 'percentage', category: 'demographics' },
@@ -58,8 +58,8 @@ const layerConfig = {
     'crime_count': { label: 'Crime Count', type: 'count', category: 'demographics' },
 
     // Housing
-    'Median_Home_Value': { label: 'Median Home Value', type: 'count', category: 'housing' },
-    'Median_Gross_Rent': { label: 'Median Gross Rent', type: 'count', category: 'housing' },
+    'Median_Home_Value': { label: 'Median Home Value', type: 'currency', category: 'housing' },
+    'Median_Gross_Rent': { label: 'Median Gross Rent', type: 'currency', category: 'housing' },
     'Percent_Renter_Occupied': { label: 'Renter-Occupied %', type: 'percentage', category: 'housing' },
     'Percent_Owner_Occupied': { label: 'Owner-Occupied %', type: 'percentage', category: 'housing' },
     'Percent_Built_Pre_1980': { label: 'Built Pre-1980 %', type: 'percentage', category: 'housing' },
@@ -74,17 +74,17 @@ const layerConfig = {
     'Percent_Vacant': { label: 'Vacancy Rate %', type: 'percentage', category: 'housing' },
 
     // Health
-    'GENERAL.HEALTH': { label: 'Poor General Health', type: 'health', category: 'health' },
-    'POOR.PHYSICAL.HEALTH': { label: 'Poor Physical Health', type: 'health', category: 'health' },
-    'POOR.MENTAL.HEALTH': { label: 'Poor Mental Health', type: 'health', category: 'health' },
-    'HIGH.BLOOD.PRESSURE': { label: 'High Blood Pressure', type: 'health', category: 'health' },
-    'BINGE.DRINKING': { label: 'Binge Drinking', type: 'health', category: 'health' },
-    'CANCER..EXCLUDING.SKIN.CANCER.': { label: 'Cancer (excl. skin)', type: 'health', category: 'health' },
-    'ASTHMA': { label: 'Asthma', type: 'health', category: 'health' },
-    'DIABETES': { label: 'Diabetes', type: 'health', category: 'health' },
-    'CORONARY.HEART.DISEASE': { label: 'Coronary Heart Disease', type: 'health', category: 'health' },
-    'OBESITY': { label: 'Obesity', type: 'health', category: 'health' },
-    'DEPRESSION': { label: 'Depression', type: 'health', category: 'health' },
+    'GENERAL.HEALTH': { label: 'Poor General Health %', type: 'health_percentage', category: 'health' },
+    'POOR.PHYSICAL.HEALTH': { label: 'Poor Physical Health %', type: 'health_percentage', category: 'health' },
+    'POOR.MENTAL.HEALTH': { label: 'Poor Mental Health %', type: 'health_percentage', category: 'health' },
+    'HIGH.BLOOD.PRESSURE': { label: 'High Blood Pressure %', type: 'health_percentage', category: 'health' },
+    'BINGE.DRINKING': { label: 'Binge Drinking %', type: 'health_percentage', category: 'health' },
+    'CANCER..EXCLUDING.SKIN.CANCER.': { label: 'Cancer %', type: 'health_percentage', category: 'health' },
+    'ASTHMA': { label: 'Asthma %', type: 'health_percentage', category: 'health' },
+    'DIABETES': { label: 'Diabetes %', type: 'health_percentage', category: 'health' },
+    'CORONARY.HEART.DISEASE': { label: 'Coronary Heart Disease %', type: 'health_percentage', category: 'health' },
+    'OBESITY': { label: 'Obesity %', type: 'health_percentage', category: 'health' },
+    'DEPRESSION': { label: 'Depression %', type: 'health_percentage', category: 'health' },
 
     'rank': { label: 'Rank', type: 'rank', category: 'other' }
 };
@@ -1503,7 +1503,7 @@ function updateLayer(property) {
 function updateLegend(property) {
     const [min, max] = getDataExtent(property);
     const config = layerConfig[property];
-    const isPercentage = config?.type === 'percentage' || config?.type === 'health';
+    const isPercentage = config?.type === 'percentage' || config?.type === 'health_percentage';
 
     // Use category-based colors to match the map
     let colors;
@@ -1511,7 +1511,7 @@ function updateLegend(property) {
         colors = CONFIG.colors.demographics;
     } else if (config?.category === 'housing') {
         colors = CONFIG.colors.housing;
-    } else if (config?.category === 'health' || config?.type === 'health') {
+    } else if (config?.category === 'health' || config?.type === 'health_percentage') {
         colors = CONFIG.colors.health;
     } else if (config?.type === 'percentage') {
         colors = CONFIG.colors.percentages;
@@ -1544,11 +1544,14 @@ function updateLegend(property) {
 
 function formatValue(value, isPercentage, property) {
     const config = layerConfig[property];
-    if (config?.type === 'health') {
-        // Health values are now stored as whole numbers (e.g., 14 for 14%)
-        return value.toFixed(1) + '%';
+    if (config?.type === 'health_percentage') {
+        // Health values are stored as whole numbers (e.g., 14 for 14%)
+        return value.toFixed(0) + '%';
     }
     if (isPercentage) return (value).toFixed(0) + '%';
+    if (config?.type === 'currency') {
+        return '$' + Math.round(value).toLocaleString();
+    }
     if (property && (property.includes('Income') || property.includes('Value') || property.includes('Rent'))) {
         return '$' + Math.round(value).toLocaleString();
     }
@@ -1733,21 +1736,21 @@ function createAllScatterplots() {
             { var: 'Total_Population', label: 'Total Population', category: 'demographics' },
             { var: 'Median_Household_Income', label: 'Median Household Income', category: 'demographics' },
             { var: 'Percent_Below_Poverty', label: 'Below Poverty %', category: 'demographics' },
-            { var: 'Percent_Low_Income_Under_35K', label: 'Low Income %', category: 'demographics' },
-            { var: 'Percent_High_Income_100K_Plus', label: 'High Income %', category: 'demographics' },
+            { var: 'Percent_Low_Income_Under_35K', label: 'Low Income % (<$35K)', category: 'demographics' },
+            { var: 'Percent_High_Income_100K_Plus', label: 'High Income % ($100K+)', category: 'demographics' },
             { var: 'Percent_White', label: 'White %', category: 'demographics' },
             { var: 'Percent_Black', label: 'Black %', category: 'demographics' },
-            { var: 'Percent_Hispanic', label: 'Hispanic %', category: 'demographics' },
+            { var: 'Percent_Hispanic', label: 'Hispanic/Latino %', category: 'demographics' },
             { var: 'Percent_Family_Households', label: 'Family Households %', category: 'demographics' },
-            { var: 'Percent_Households_With_Children', label: 'With Children %', category: 'demographics' },
+            { var: 'Percent_Households_With_Children', label: 'Households With Children %', category: 'demographics' },
             { var: 'Percent_Children_Below_Poverty', label: 'Children in Poverty %', category: 'demographics' },
             { var: 'crime_count', label: 'Crime Count', category: 'demographics' }
         ],
         housing: [
             { var: 'Median_Home_Value', label: 'Median Home Value', category: 'housing' },
             { var: 'Median_Gross_Rent', label: 'Median Gross Rent', category: 'housing' },
-            { var: 'Percent_Renter_Occupied', label: 'Renter %', category: 'housing' },
-            { var: 'Percent_Owner_Occupied', label: 'Owner %', category: 'housing' },
+            { var: 'Percent_Renter_Occupied', label: 'Renter-Occupied %', category: 'housing' },
+            { var: 'Percent_Owner_Occupied', label: 'Owner-Occupied %', category: 'housing' },
             { var: 'Percent_Vacant', label: 'Vacancy Rate %', category: 'housing' },
             { var: 'Percent_Built_Pre_1980', label: 'Built Pre-1980 %', category: 'housing' },
             { var: 'Percent_High_Rent_Burden_30_Plus', label: 'Rent Burden 30%+', category: 'housing' },
@@ -1760,17 +1763,17 @@ function createAllScatterplots() {
             { var: 'permits_res_count', label: 'Building Permits', category: 'housing' }
         ],
         health: [
-            { var: 'GENERAL.HEALTH', label: 'Poor General Health', category: 'health' },
-            { var: 'POOR.PHYSICAL.HEALTH', label: 'Poor Physical Health', category: 'health' },
-            { var: 'POOR.MENTAL.HEALTH', label: 'Poor Mental Health', category: 'health' },
-            { var: 'HIGH.BLOOD.PRESSURE', label: 'High Blood Pressure', category: 'health' },
-            { var: 'BINGE.DRINKING', label: 'Binge Drinking', category: 'health' },
-            { var: 'CANCER..EXCLUDING.SKIN.CANCER.', label: 'Cancer', category: 'health' },
-            { var: 'ASTHMA', label: 'Asthma', category: 'health' },
-            { var: 'DIABETES', label: 'Diabetes', category: 'health' },
-            { var: 'CORONARY.HEART.DISEASE', label: 'Coronary Heart Disease', category: 'health' },
-            { var: 'OBESITY', label: 'Obesity', category: 'health' },
-            { var: 'DEPRESSION', label: 'Depression', category: 'health' }
+            { var: 'GENERAL.HEALTH', label: 'Poor General Health %', category: 'health' },
+            { var: 'POOR.PHYSICAL.HEALTH', label: 'Poor Physical Health %', category: 'health' },
+            { var: 'POOR.MENTAL.HEALTH', label: 'Poor Mental Health %', category: 'health' },
+            { var: 'HIGH.BLOOD.PRESSURE', label: 'High Blood Pressure %', category: 'health' },
+            { var: 'BINGE.DRINKING', label: 'Binge Drinking %', category: 'health' },
+            { var: 'CANCER..EXCLUDING.SKIN.CANCER.', label: 'Cancer %', category: 'health' },
+            { var: 'ASTHMA', label: 'Asthma %', category: 'health' },
+            { var: 'DIABETES', label: 'Diabetes %', category: 'health' },
+            { var: 'CORONARY.HEART.DISEASE', label: 'Coronary Heart Disease %', category: 'health' },
+            { var: 'OBESITY', label: 'Obesity %', category: 'health' },
+            { var: 'DEPRESSION', label: 'Depression %', category: 'health' }
         ]
     };
 
@@ -1962,14 +1965,32 @@ class ScatterPlot {
         
         this.r2Label.text(`R² = ${regression.r2.toFixed(3)}`);
         
-        const xFormat = xProperty === 'rank' ? d3.format('d') : 
-                       xProperty.includes('Percent') ? d3.format('.0%') : 
-                       xProperty.includes('Income') ? d => '$' + d3.format(',')(d) : d3.format(',');
+        // Get the proper formatting based on variable type
+        const xConfig = layerConfig[xProperty];
+        let xFormat;
+        if (xProperty === 'rank') {
+            xFormat = d3.format('d');
+        } else if (xConfig?.type === 'percentage' || xConfig?.type === 'health_percentage') {
+            // Data is already in 0-100 format, just add %
+            xFormat = d => d3.format('.0f')(d) + '%';
+        } else if (xConfig?.type === 'currency') {
+            xFormat = d => '$' + d3.format(',.0f')(d);
+        } else {
+            xFormat = d3.format(',');
+        }
         this.xAxis.transition().duration(500).call(d3.axisBottom(this.xScale).tickFormat(xFormat).ticks(4))
             .selectAll('text').style('font-size', '7px');
-        
-        const yFormat = yProperty.includes('Percent') ? d3.format('.0%') : 
-                       yProperty.includes('Income') ? d => '$' + d3.format(',')(d) : d3.format(',');
+
+        const yConfig = layerConfig[yProperty];
+        let yFormat;
+        if (yConfig?.type === 'percentage' || yConfig?.type === 'health_percentage') {
+            // Data is already in 0-100 format, just add %
+            yFormat = d => d3.format('.0f')(d) + '%';
+        } else if (yConfig?.type === 'currency') {
+            yFormat = d => '$' + d3.format(',.0f')(d);
+        } else {
+            yFormat = d3.format(',');
+        }
         this.yAxis.transition().duration(500).call(d3.axisLeft(this.yScale).tickFormat(yFormat).ticks(4))
             .selectAll('text').style('font-size', '7px');
         

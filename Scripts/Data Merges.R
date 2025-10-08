@@ -32,8 +32,8 @@ setwd("C:/Users/RichardCarder/Documents/dev/Baton-Rouge-Housing-and-Health/Input
 HQM_Housing <- read.csv("HQM_Housing.csv", stringsAsFactors = FALSE) 
 cat("Loaded HQM Housing data:", nrow(HQM_Housing), "rows\n")
 
-CDC_Places <- read.csv("CDC_Places.csv", stringsAsFactors = FALSE)%>%
-  dplyr::rename("GEOID" = "CENSUS.TRACT")
+CDC_Places <- read.csv("CDC_Places_2024.csv", stringsAsFactors = FALSE)%>%
+  dplyr::rename("GEOID" = "TractFIPS")
 cat("Loaded CDC Places data:", nrow(CDC_Places), "rows\n")
 
 OpenBR <- read.csv("OpenBR_Tract_Totals.csv", stringsAsFactors = FALSE)%>%
