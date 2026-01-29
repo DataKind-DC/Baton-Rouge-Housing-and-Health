@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(awk:*)",
+      "Bash(powershell:*)",
+      "Bash(python:*)",
+      "Bash(csvtool namedcol:*)",
+      "Bash(Rscript:*)",
+      "WebFetch(domain:censusreporter.org)",
+      "WebFetch(domain:api.census.gov)",
+      "WebFetch(domain:data.census.gov)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

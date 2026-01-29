@@ -1,0 +1,732 @@
+{
+  "tabs": [
+    {
+      "id": "housing-supply",
+      "name": "Housing Supply & Characteristics",
+      "icon": "home",
+      "color": "#0d47a1",
+      "groups": [
+        {
+          "id": "housing-overview",
+          "name": "Housing Supply Overview",
+          "primaryLayers": [
+            "Total_Housing_Units",
+            "Pct_Vacant",
+            "Occupancy_Rate",
+            "Housing_units_per_sqmi"
+          ],
+          "sidebarVariables": [
+            "Total_Population",
+            "Occupied_Units",
+            "Vacant_Units",
+            "Avg_Household_Size",
+            "Population_per_sqmi"
+          ]
+        },
+        {
+          "id": "housing-tenure",
+          "name": "Housing Tenure",
+          "primaryLayers": [
+            "Pct_Owner_Occupied",
+            "Pct_Renter_Occupied",
+            "Owner_Occupied",
+            "Renter_Occupied"
+          ],
+          "sidebarVariables": [
+            "Median_Home_Value",
+            "Median_Gross_Rent",
+            "Median_Income_Owner_Occupied",
+            "Median_Income_Renter_Occupied",
+            "Total_Households"
+          ]
+        },
+        {
+          "id": "structure-types",
+          "name": "Structure Types",
+          "primaryLayers": [
+            "Pct_Single_Family",
+            "Pct_Multi_Family_5_Plus",
+            "Multi_Family_10_Plus_Units",
+            "Multi_Family_20_Plus_Units"
+          ],
+          "sidebarVariables": [
+            "Single_Family_Detached",
+            "Single_Family_Attached",
+            "Multi_Family_2_4_Units",
+            "Mobile_Home",
+            "Gross_housing_density_per_sqmi"
+          ]
+        },
+        {
+          "id": "unit-size",
+          "name": "Unit Size & Bedrooms",
+          "primaryLayers": [
+            "Three_Plus_Bedroom_Units",
+            "Two_Plus_Bedroom_Units",
+            "One_Bedroom"
+          ],
+          "sidebarVariables": [
+            "Two_Bedrooms",
+            "Three_Bedrooms",
+            "Four_Bedrooms",
+            "Pct_Households_With_Children",
+            "Large_Owner_Households_4_Plus",
+            "Large_Renter_Households_4_Plus"
+          ]
+        },
+        {
+          "id": "housing-age",
+          "name": "Housing Age",
+          "primaryLayers": [
+            "Built_2020_Later",
+            "Built_2010_2019",
+            "Built_2000_2009",
+            "Built_Before_1960"
+          ],
+          "sidebarVariables": [
+            "Built_1990_1999",
+            "Built_1980_1989",
+            "Built_1970_1979",
+            "Median_Home_Value"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "affordability",
+      "name": "Housing Affordability",
+      "icon": "attach_money",
+      "color": "#ff9800",
+      "groups": [
+        {
+          "id": "housing-costs",
+          "name": "Housing Costs",
+          "primaryLayers": [
+            "Median_Home_Value",
+            "Median_Gross_Rent",
+            "Price_To_Income_Ratio",
+            "Rent_Burden_Ratio"
+          ],
+          "sidebarVariables": [
+            "Median_Household_Income",
+            "Median_Income_Owner_Occupied",
+            "Median_Income_Renter_Occupied",
+            "Pct_Below_Poverty",
+            "High_Rent_Burden_50_Plus_Units"
+          ]
+        },
+        {
+          "id": "cost-burden",
+          "name": "Cost Burden & Financial Stress",
+          "primaryLayers": [
+            "High_Rent_Burden_30_Plus_Units",
+            "High_Rent_Burden_50_Plus_Units",
+            "Pct_Below_Poverty"
+          ],
+          "sidebarVariables": [
+            "Median_Gross_Rent",
+            "Median_Household_Income",
+            "Pct_Renter_Occupied",
+            "HH_Received_SNAP",
+            "Pct_HH_SNAP"
+          ]
+        },
+        {
+          "id": "income-distribution",
+          "name": "Income Distribution",
+          "primaryLayers": [
+            "Median_Household_Income",
+            "Low_Income_Under_35K",
+            "High_Income_100K_Plus"
+          ],
+          "sidebarVariables": [
+            "Middle_Income_35K_100K",
+            "Below_Poverty_Level",
+            "Children_Below_Poverty",
+            "Pct_Below_Poverty"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demographics",
+      "name": "Demographics",
+      "icon": "people",
+      "color": "#1b5e20",
+      "groups": [
+        {
+          "id": "population-overview",
+          "name": "Population Overview",
+          "primaryLayers": [
+            "Total_Population",
+            "Population_per_sqmi",
+            "Avg_Household_Size"
+          ],
+          "sidebarVariables": [
+            "Total_Housing_Units",
+            "Occupied_Units",
+            "Total_Households",
+            "Family_Households",
+            "Nonfamily_Living_Alone"
+          ]
+        },
+        {
+          "id": "race-ethnicity",
+          "name": "Race & Ethnicity",
+          "primaryLayers": [
+            "Pct_White",
+            "Pct_Black",
+            "Pct_Hispanic",
+            "Pct_Asian"
+          ],
+          "sidebarVariables": [
+            "White_Alone",
+            "Black_Alone",
+            "Hispanic_Latino",
+            "Asian_Alone",
+            "Total_Population",
+            "Median_Household_Income"
+          ]
+        },
+        {
+          "id": "household-composition",
+          "name": "Household Composition",
+          "primaryLayers": [
+            "Pct_Households_With_Children",
+            "Family_Households",
+            "Nonfamily_Living_Alone"
+          ],
+          "sidebarVariables": [
+            "Total_Own_Children_Under_18",
+            "Children_In_Married_Couple_Families",
+            "Children_In_Single_Mother_Families",
+            "Multigenerational_Households",
+            "Grandparents_Responsible_For_Grandchildren"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "veterans",
+      "name": "Veterans",
+      "icon": "military_tech",
+      "color": "#1a237e",
+      "groups": [
+        {
+          "id": "veteran-overview",
+          "name": "Veteran Population Overview",
+          "primaryLayers": [
+            "Vet_Total_Veterans",
+            "Pct_Veterans_Of_Adult_Pop",
+            "Veterans_per_sqmi",
+            "Veterans_per_1000_pop"
+          ],
+          "sidebarVariables": [
+            "Vet_Total_Pop_18_Plus",
+            "Vet_Total_Non_Veterans",
+            "Total_Population",
+            "Median_Household_Income"
+          ]
+        },
+        {
+          "id": "veteran-demographics",
+          "name": "Veteran Demographics",
+          "primaryLayers": [
+            "Pct_Veterans_Male",
+            "Pct_Veterans_Female",
+            "Vet_Total_65_74"
+          ],
+          "sidebarVariables": [
+            "Vet_Male_Veterans",
+            "Vet_Female_Veterans",
+            "Vet_Total_18_34",
+            "Vet_Total_35_54",
+            "Vet_Total_55_64",
+            "Vet_Total_75_Plus"
+          ]
+        },
+        {
+          "id": "veteran-race",
+          "name": "Veteran Race & Ethnicity",
+          "primaryLayers": [
+            "Pct_Veterans_White",
+            "Pct_Veterans_Black",
+            "Pct_Veterans_Latino",
+            "Pct_Veterans_Asian"
+          ],
+          "sidebarVariables": [
+            "Vet_Total_White",
+            "Vet_Total_Black",
+            "Vet_Total_Latino",
+            "Vet_Total_Asian",
+            "Pct_White",
+            "Pct_Black"
+          ]
+        },
+        {
+          "id": "period-of-service",
+          "name": "Period of Service",
+          "primaryLayers": [
+            "Vet_Gulf_War_2001_Later",
+            "Vet_Vietnam_Era",
+            "Vet_Gulf_War_1990_2001"
+          ],
+          "sidebarVariables": [
+            "Vet_Korean_War",
+            "Vet_World_War_II",
+            "Vet_Other_Periods",
+            "Vet_Total_Veterans"
+          ],
+          "note": "Veterans can serve in multiple periods"
+        },
+        {
+          "id": "veteran-employment",
+          "name": "Veteran Employment & Income",
+          "primaryLayers": [
+            "Pct_Veterans_Employed",
+            "Pct_Veterans_Unemployed",
+            "Vet_Median_Income_Veterans"
+          ],
+          "sidebarVariables": [
+            "Vet_Veterans_18_64_Total",
+            "Vet_Veterans_In_Labor_Force",
+            "Vet_Veterans_Employed",
+            "Vet_Median_Income_Non_Veterans",
+            "Median_Household_Income"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "health-insurance",
+      "name": "Health & Insurance",
+      "icon": "local_hospital",
+      "color": "#00897b",
+      "groups": [
+        {
+          "id": "overall-coverage",
+          "name": "Overall Coverage Status",
+          "primaryLayers": [
+            "Pct_No_Health_Insurance",
+            "Pct_With_Health_Insurance",
+            "With_Health_Insurance",
+            "No_Health_Insurance"
+          ],
+          "sidebarVariables": [
+            "Total_Pop_Insurance_Universe",
+            "Median_Household_Income",
+            "Pct_Below_Poverty",
+            "Pct_Employed_With_Insurance"
+          ],
+          "featured": true,
+          "note": "Key metric for healthcare access"
+        },
+        {
+          "id": "private-insurance",
+          "name": "Private Insurance",
+          "primaryLayers": [
+            "Pct_With_Private_Insurance",
+            "Pct_With_Employer_Insurance",
+            "Pct_With_DirectPurchase_Insurance"
+          ],
+          "sidebarVariables": [
+            "With_Private_Insurance",
+            "With_Employer_Insurance",
+            "With_DirectPurchase_Insurance",
+            "Median_Household_Income",
+            "Pct_Below_Poverty"
+          ]
+        },
+        {
+          "id": "public-insurance",
+          "name": "Public Insurance Programs",
+          "primaryLayers": [
+            "Pct_With_Medicare",
+            "Pct_With_Medicaid",
+            "Pct_With_TRICARE",
+            "Pct_With_VA_HealthCare"
+          ],
+          "sidebarVariables": [
+            "With_Medicare",
+            "With_Medicaid",
+            "With_TRICARE",
+            "With_VA_HealthCare",
+            "Pct_Below_Poverty",
+            "Vet_Total_Veterans"
+          ],
+          "note": "People can have multiple types of coverage"
+        },
+        {
+          "id": "military-veteran-healthcare",
+          "name": "Military & Veteran Healthcare",
+          "primaryLayers": [
+            "Pct_With_TRICARE",
+            "Pct_With_VA_HealthCare",
+            "Vet_Total_Veterans"
+          ],
+          "sidebarVariables": [
+            "With_TRICARE",
+            "With_VA_HealthCare",
+            "Vet_Total_Veterans",
+            "Veterans_per_1000_pop",
+            "Pct_Employed_With_Insurance"
+          ]
+        },
+        {
+          "id": "coverage-gaps",
+          "name": "Coverage Gaps & Vulnerable Populations",
+          "primaryLayers": [
+            "Pct_No_Health_Insurance",
+            "No_Health_Insurance"
+          ],
+          "sidebarVariables": [
+            "Pct_Hispanic",
+            "Pct_Below_Poverty",
+            "Pct_With_DirectPurchase_Insurance",
+            "Median_Household_Income",
+            "Children_Below_Poverty"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "name": "Education & Opportunity",
+      "icon": "school",
+      "color": "#4a148c",
+      "groups": [
+        {
+          "id": "educational-attainment",
+          "name": "Educational Attainment",
+          "primaryLayers": [
+            "Pct_Bachelors_Plus",
+            "Pct_Less_Than_HS",
+            "Pct_Graduate"
+          ],
+          "sidebarVariables": [
+            "Total_Pop_25_Plus",
+            "Less_Than_HS",
+            "HS_Grad_Or_Equivalent",
+            "Bachelors_Degree",
+            "Graduate_Or_Professional",
+            "Median_Household_Income"
+          ]
+        },
+        {
+          "id": "veteran-education",
+          "name": "Veteran vs Non-Veteran Education",
+          "primaryLayers": [
+            "Vet_Education_Bachelors_Plus",
+            "NonVet_Education_Bachelors_Plus"
+          ],
+          "sidebarVariables": [
+            "Vet_Education_Less_Than_HS",
+            "Vet_Education_HS_Grad",
+            "Vet_Education_Some_College",
+            "NonVet_Education_Less_Than_HS",
+            "Vet_Median_Income_Veterans",
+            "Vet_Median_Income_Non_Veterans"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "economic-hardship",
+      "name": "Economic Hardship",
+      "icon": "trending_down",
+      "color": "#c62828",
+      "groups": [
+        {
+          "id": "poverty-assistance",
+          "name": "Poverty & Assistance Programs",
+          "primaryLayers": [
+            "Pct_Below_Poverty",
+            "Pct_HH_SNAP",
+            "Pct_HH_Public_Assistance"
+          ],
+          "sidebarVariables": [
+            "Below_Poverty_Level",
+            "Children_Below_Poverty",
+            "HH_Received_SNAP",
+            "HH_With_Public_Assistance",
+            "Median_Household_Income",
+            "Pct_With_Medicaid"
+          ]
+        },
+        {
+          "id": "child-poverty",
+          "name": "Child Poverty & Family Hardship",
+          "primaryLayers": [
+            "Children_Below_Poverty",
+            "Pct_Below_Poverty",
+            "Children_In_Single_Mother_Families"
+          ],
+          "sidebarVariables": [
+            "Total_Own_Children_Under_18",
+            "Children_In_Married_Couple_Families",
+            "Pct_Households_With_Children",
+            "HH_Received_SNAP",
+            "High_Rent_Burden_50_Plus_Units"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transportation",
+      "name": "Transportation & Connectivity",
+      "icon": "directions_car",
+      "color": "#e65100",
+      "groups": [
+        {
+          "id": "commute-patterns",
+          "name": "Commute Patterns",
+          "primaryLayers": [
+            "Pct_Commute_60_Plus",
+            "Pct_Commute_Under_30",
+            "Pct_Work_At_Home"
+          ],
+          "sidebarVariables": [
+            "Total_Workers_Commute_Universe",
+            "Commute_Under_30_Min",
+            "Commute_60_Plus_Min",
+            "Work_At_Home",
+            "Median_Household_Income",
+            "Pct_Owner_Occupied"
+          ]
+        },
+        {
+          "id": "vehicle-access",
+          "name": "Vehicle Access",
+          "primaryLayers": [
+            "Pct_HH_No_Vehicle",
+            "Pct_Renter_No_Vehicle",
+            "Pct_Owner_No_Vehicle"
+          ],
+          "sidebarVariables": [
+            "Total_No_Vehicle",
+            "Total_With_Vehicle",
+            "Pct_Below_Poverty",
+            "Pct_Commute_60_Plus",
+            "Population_per_sqmi"
+          ]
+        },
+        {
+          "id": "digital-access",
+          "name": "Digital Access",
+          "primaryLayers": [
+            "Pct_HH_With_Broadband",
+            "Pct_HH_No_Computer",
+            "Pct_HH_With_Internet"
+          ],
+          "sidebarVariables": [
+            "HH_With_Internet",
+            "HH_Broadband",
+            "No_Computer",
+            "Median_Household_Income",
+            "Pct_Below_Poverty",
+            "Pct_Bachelors_Plus"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mobility",
+      "name": "Housing Mobility & Stability",
+      "icon": "moving",
+      "color": "#00838f",
+      "groups": [
+        {
+          "id": "residential-stability",
+          "name": "Residential Stability",
+          "primaryLayers": [
+            "Pct_Same_House_1_Year",
+            "Pct_Moved_Since_2020",
+            "Pct_Moved_Since_2010"
+          ],
+          "sidebarVariables": [
+            "Same_House_1_Year_Ago",
+            "Moved_Within_County",
+            "Moved_From_Different_State",
+            "Pct_Owner_Occupied",
+            "Pct_Renter_Occupied"
+          ]
+        },
+        {
+          "id": "move-in-timing",
+          "name": "Move-In Timing & Housing Age",
+          "primaryLayers": [
+            "Moved_In_2020_Later",
+            "Moved_In_Before_1990"
+          ],
+          "sidebarVariables": [
+            "Moved_In_2010_2019",
+            "Moved_In_2000_2009",
+            "Built_2020_Later",
+            "Median_Home_Value",
+            "Median_Gross_Rent"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "disability",
+      "name": "Disability & Special Needs",
+      "icon": "accessible",
+      "color": "#6d4c41",
+      "groups": [
+        {
+          "id": "disability-prevalence",
+          "name": "Disability Prevalence",
+          "primaryLayers": [
+            "Pct_With_Disability",
+            "Total_With_Disability"
+          ],
+          "sidebarVariables": [
+            "Total_No_Disability",
+            "Total_Pop_Disability_Universe",
+            "Pct_Veterans_With_Service_Disability",
+            "Median_Household_Income",
+            "Pct_With_Medicaid"
+          ]
+        },
+        {
+          "id": "caregiving",
+          "name": "Complex Caregiving Arrangements",
+          "primaryLayers": [
+            "Pct_Multigenerational",
+            "Pct_Grandparents_Caring",
+            "Elderly_Living_Alone"
+          ],
+          "sidebarVariables": [
+            "Multigenerational_Households",
+            "Grandparents_Responsible_For_Grandchildren",
+            "Pct_Households_With_Children",
+            "Median_Household_Income",
+            "Three_Plus_Bedroom_Units"
+          ]
+        }
+      ]
+    }
+  ],
+  "storyViews": [
+    {
+      "id": "veteran-support",
+      "name": "Veteran Support Needs",
+      "description": "Identifies areas where veterans may need additional support",
+      "icon": "military_tech",
+      "primaryLayer": "Vet_Total_Veterans",
+      "sidebarVariables": [
+        "Pct_Veterans_Unemployed",
+        "Pct_With_VA_HealthCare",
+        "Vet_Median_Income_Veterans",
+        "Pct_Veterans_With_Service_Disability",
+        "Pct_Below_Poverty"
+      ],
+      "tags": ["veterans", "support", "healthcare", "employment"]
+    },
+    {
+      "id": "affordability-crisis",
+      "name": "Affordability Crisis Zones",
+      "description": "Areas with severe housing cost burden",
+      "icon": "attach_money",
+      "primaryLayer": "High_Rent_Burden_50_Plus_Units",
+      "sidebarVariables": [
+        "Median_Gross_Rent",
+        "Median_Household_Income",
+        "Pct_Below_Poverty",
+        "Pct_Renter_Occupied",
+        "Pct_HH_SNAP"
+      ],
+      "tags": ["affordability", "housing", "poverty"]
+    },
+    {
+      "id": "healthcare-access",
+      "name": "Healthcare Access Gaps",
+      "description": "Communities with high uninsured rates",
+      "icon": "local_hospital",
+      "primaryLayer": "Pct_No_Health_Insurance",
+      "sidebarVariables": [
+        "Pct_Below_Poverty",
+        "Pct_Hispanic",
+        "Median_Household_Income",
+        "Pct_With_DirectPurchase_Insurance",
+        "Children_Below_Poverty"
+      ],
+      "tags": ["healthcare", "insurance", "vulnerable-populations"]
+    },
+    {
+      "id": "child-wellbeing",
+      "name": "Child Well-Being Index",
+      "description": "Areas where children face economic hardship",
+      "icon": "child_care",
+      "primaryLayer": "Children_Below_Poverty",
+      "sidebarVariables": [
+        "Pct_Households_With_Children",
+        "Children_In_Single_Mother_Families",
+        "Pct_HH_SNAP",
+        "Pct_No_Health_Insurance",
+        "Three_Plus_Bedroom_Units"
+      ],
+      "tags": ["children", "poverty", "families"]
+    },
+    {
+      "id": "digital-divide",
+      "name": "Digital Divide",
+      "description": "Areas lacking internet and computer access",
+      "icon": "wifi_off",
+      "primaryLayer": "Pct_HH_With_Broadband",
+      "sidebarVariables": [
+        "Pct_HH_No_Computer",
+        "Median_Household_Income",
+        "Pct_Below_Poverty",
+        "Pct_Bachelors_Plus",
+        "Pct_With_Employer_Insurance"
+      ],
+      "tags": ["digital", "connectivity", "education"]
+    },
+    {
+      "id": "transit-dependency",
+      "name": "Transit Dependency",
+      "description": "Areas with limited vehicle access",
+      "icon": "directions_bus",
+      "primaryLayer": "Pct_HH_No_Vehicle",
+      "sidebarVariables": [
+        "Pct_Commute_60_Plus",
+        "Below_Poverty_Level",
+        "Population_per_sqmi",
+        "Pct_Renter_Occupied",
+        "Pct_HH_SNAP"
+      ],
+      "tags": ["transportation", "mobility", "poverty"]
+    },
+    {
+      "id": "opportunity-zones",
+      "name": "Opportunity Zones",
+      "description": "High-resource areas with strong indicators",
+      "icon": "trending_up",
+      "primaryLayer": "Pct_Bachelors_Plus",
+      "sidebarVariables": [
+        "Median_Household_Income",
+        "Median_Home_Value",
+        "Pct_With_Employer_Insurance",
+        "Pct_Below_Poverty",
+        "Pct_HH_With_Broadband"
+      ],
+      "tags": ["education", "income", "opportunity"]
+    }
+  ],
+  "metadata": {
+    "dataSource": "American Community Survey 2023 (5-Year Estimates)",
+    "dataYears": "2019-2023",
+    "geography": "Census Tracts",
+    "county": "Cook County, Illinois",
+    "totalTracts": "~1,300",
+    "lastUpdated": "2024",
+    "notes": [
+      "Some insurance variables can sum to >100% due to multiple coverage",
+      "Veterans can serve in multiple periods",
+      "Small tracts may have suppressed data",
+      "Percentages calculated as % of total population unless noted"
+    ]
+  }
+}

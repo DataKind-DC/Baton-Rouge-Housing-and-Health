@@ -1,19 +1,19 @@
-// Baton Rouge Housing and Health Map Application
+// Cook County Veterans, Economic Security, and Housing Map Application
 mapboxgl.accessToken = 'pk.eyJ1Ijoicm1jYXJkZXIxIiwiYSI6ImNtN2pqOG56cjA3bXMybXE0dnhmMm9xM2wifQ.O2mYeNpbnS7TA-J_0q2wkg';
 
 // Configuration
 const CONFIG = {
     map: {
         style: 'mapbox://styles/mapbox/light-v11',
-        center: [-91.08, 30.48],
-        zoom: 10.31
+        center: [-87.75, 41.85],
+        zoom: 9.5
     },
     colors: {
         counts: ['#f7f4f9', '#e7e1ef', '#d4b9da', '#c994c7', '#df65b0', '#e7298a', '#ce1256', '#91003f'],
         percentages: ['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15'],
-        demographics: ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177'],
+        veterans: ['#f7fcf5','#e5f5e0','#c7e9c0','#a1d99b','#74c476','#41ab5d','#238b45','#005a32'],
+        economic: ['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000'],
         housing: ['#ffffd9','#edf8b1','#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#0c2c84'],
-        health: ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'],
         race: {
             'White': '#feb24c',
             'Black': '#fa9fb5',
@@ -28,63 +28,99 @@ const CONFIG = {
 
 // Global variables
 let map;
-let currentLayer = 'Total_Population';
+let currentLayer = 'Vet_Total_Veterans';
 let currentXAxis = 'rank';
 let demographicsData = null;
 let currentHoveredFeature = null;
 let scatterPlot = null;
 let isFrozen = false;
 let originalMapView = null;
-let parishTotals = null;
+let countyTotals = null;
 let tractRankings = null;
 let mapPopup = null;
 let gridScatterPlots = [];
-let currentScatterCategory = 'demographics';
+let currentScatterCategory = 'veterans';
 
 // Data layer configurations
 const layerConfig = {
-    // Demographics
-    'Total_Population': { label: 'Total Population', type: 'count', category: 'demographics' },
-    'Median_Household_Income': { label: 'Median Household Income', type: 'currency', category: 'demographics' },
-    'Percent_Below_Poverty': { label: 'Below Poverty %', type: 'percentage', category: 'demographics' },
-    'Percent_Low_Income_Under_35K': { label: 'Low Income % (<$35K)', type: 'percentage', category: 'demographics' },
-    'Percent_High_Income_100K_Plus': { label: 'High Income % ($100K+)', type: 'percentage', category: 'demographics' },
-    'Percent_White': { label: 'White %', type: 'percentage', category: 'demographics' },
-    'Percent_Black': { label: 'Black %', type: 'percentage', category: 'demographics' },
-    'Percent_Hispanic': { label: 'Hispanic/Latino %', type: 'percentage', category: 'demographics' },
-    'Percent_Family_Households': { label: 'Family Households %', type: 'percentage', category: 'demographics' },
-    'Percent_Households_With_Children': { label: 'Households With Children %', type: 'percentage', category: 'demographics' },
-    'Percent_Children_Below_Poverty': { label: 'Children in Poverty %', type: 'percentage', category: 'demographics' },
-    'crime_count': { label: 'Crime Count', type: 'count', category: 'demographics' },
+    // Veterans - Population
+    'Vet_Total_Veterans': { label: 'Total Veterans', type: 'count', category: 'veterans' },
+    'Pct_Veterans_Of_Adult_Pop': { label: 'Veterans % of Adults', type: 'percentage', category: 'veterans' },
+    'veterans_per_1000_pop': { label: 'Veterans per 1,000 Pop', type: 'count', category: 'veterans' },
+    // Veterans - Demographics
+    'Pct_Veterans_Male': { label: 'Male Veterans %', type: 'percentage', category: 'veterans' },
+    'Pct_Veterans_Female': { label: 'Female Veterans %', type: 'percentage', category: 'veterans' },
+    // Veterans - Age Groups
+    'Pct_Veterans_18_34': { label: 'Veterans 18-34 %', type: 'percentage', category: 'veterans' },
+    'Pct_Veterans_35_54': { label: 'Veterans 35-54 %', type: 'percentage', category: 'veterans' },
+    'Pct_Veterans_55_64': { label: 'Veterans 55-64 %', type: 'percentage', category: 'veterans' },
+    'Pct_Veterans_65_Plus': { label: 'Veterans 65+ %', type: 'percentage', category: 'veterans' },
+    // Veterans - Economic Status
+    'Pct_Veterans_Employed': { label: 'Veterans Employed %', type: 'percentage', category: 'veterans' },
+    'Pct_Veterans_Unemployed': { label: 'Veterans Unemployed %', type: 'percentage', category: 'veterans' },
+    'Vet_Median_Income_Veteran_Total': { label: 'Veteran Median Income', type: 'currency', category: 'veterans' },
+    // Veterans - Poverty & Disability
+    'Pct_Vet_18_64_In_Poverty': { label: 'Veterans 18-64 in Poverty %', type: 'percentage', category: 'veterans' },
+    'Pct_Vet_65_Plus_In_Poverty': { label: 'Veterans 65+ in Poverty %', type: 'percentage', category: 'veterans' },
+    'Pct_Vet_With_Service_Disability': { label: 'Service-Connected Disability %', type: 'percentage', category: 'veterans' },
+    // Veterans - Health Coverage
+    'Pct_With_TRICARE': { label: 'TRICARE Coverage %', type: 'percentage', category: 'veterans' },
+    'Pct_With_VA_HealthCare': { label: 'VA Health Care %', type: 'percentage', category: 'veterans' },
 
-    // Housing
+    // Economic Security - Income & Poverty
+    'Median_Household_Income': { label: 'Median Household Income', type: 'currency', category: 'economic' },
+    'Pct_Below_Poverty': { label: 'Below Poverty %', type: 'percentage', category: 'economic' },
+    'Low_Income_Under_35K': { label: 'Low Income (<$35K)', type: 'count', category: 'economic' },
+    'High_Income_100K_Plus': { label: 'High Income ($100K+)', type: 'count', category: 'economic' },
+    // Economic Security - Health Insurance
+    'Pct_With_Health_Insurance': { label: 'With Health Insurance %', type: 'percentage', category: 'economic' },
+    'Pct_No_Health_Insurance': { label: 'Without Health Insurance %', type: 'percentage', category: 'economic' },
+    'Pct_Employed_With_Insurance': { label: 'Employed With Insurance %', type: 'percentage', category: 'economic' },
+    'Pct_With_Employer_Insurance': { label: 'Employer Insurance %', type: 'percentage', category: 'economic' },
+    'Pct_With_Medicare': { label: 'Medicare %', type: 'percentage', category: 'economic' },
+    'Pct_With_Medicaid': { label: 'Medicaid %', type: 'percentage', category: 'economic' },
+    // Economic Security - Public Assistance
+    'Pct_HH_SNAP': { label: 'Households on SNAP %', type: 'percentage', category: 'economic' },
+    'Pct_HH_Public_Assistance': { label: 'Public Assistance %', type: 'percentage', category: 'economic' },
+    'Pct_HH_With_Social_Security': { label: 'Social Security %', type: 'percentage', category: 'economic' },
+    'Pct_HH_With_SSI': { label: 'Supplemental SSI %', type: 'percentage', category: 'economic' },
+    // Economic Security - Education
+    'Pct_Bachelors_Plus': { label: 'Bachelor\'s Degree+ %', type: 'percentage', category: 'economic' },
+    'Pct_Less_Than_HS': { label: 'Less than High School %', type: 'percentage', category: 'economic' },
+    // Economic Security - Disability & Digital Access
+    'Pct_With_Disability': { label: 'With Disability %', type: 'percentage', category: 'economic' },
+    'Pct_HH_With_Broadband': { label: 'Broadband Access %', type: 'percentage', category: 'economic' },
+    // Economic Security - Transportation
+    'Pct_Commute_60_Plus': { label: 'Commute 60+ Min %', type: 'percentage', category: 'economic' },
+    'Pct_Work_At_Home': { label: 'Work from Home %', type: 'percentage', category: 'economic' },
+    'Pct_HH_No_Vehicle': { label: 'No Vehicle %', type: 'percentage', category: 'economic' },
+
+    // Housing - Stock
+    'Total_Housing_Units': { label: 'Total Housing Units', type: 'count', category: 'housing' },
+    'Pct_Single_Family': { label: 'Single-Family %', type: 'percentage', category: 'housing' },
+    'Pct_Multi_Family_5_Plus': { label: 'Multi-Family 5+ %', type: 'percentage', category: 'housing' },
+    'Pct_Vacant': { label: 'Vacancy Rate %', type: 'percentage', category: 'housing' },
+    // Housing - Values & Costs
     'Median_Home_Value': { label: 'Median Home Value', type: 'currency', category: 'housing' },
     'Median_Gross_Rent': { label: 'Median Gross Rent', type: 'currency', category: 'housing' },
-    'Percent_Renter_Occupied': { label: 'Renter-Occupied %', type: 'percentage', category: 'housing' },
-    'Percent_Owner_Occupied': { label: 'Owner-Occupied %', type: 'percentage', category: 'housing' },
-    'Percent_Built_Pre_1980': { label: 'Built Pre-1980 %', type: 'percentage', category: 'housing' },
-    'Percent_High_Rent_Burden_30_Plus': { label: 'Rent Burden 30%+', type: 'percentage', category: 'housing' },
-    'Percent_High_Rent_Burden_50_Plus': { label: 'Rent Burden 50%+', type: 'percentage', category: 'housing' },
-    'PNP_Mean_Perc': { label: 'Poor Perception %', type: 'percentage', category: 'housing' },
-    'PI_Mean_Perc': { label: 'Poor Conditions %', type: 'percentage', category: 'housing' },
-    'blight_count': { label: 'Blight Count', type: 'count', category: 'housing' },
-    'Percent_Single_Family': { label: 'Single-Family %', type: 'percentage', category: 'housing' },
-    'Percent_Two_Plus_Bedrooms': { label: 'Two+ Bedrooms %', type: 'percentage', category: 'housing' },
-    'permits_res_count': { label: 'Building Permits', type: 'count', category: 'housing' },
-    'Percent_Vacant': { label: 'Vacancy Rate %', type: 'percentage', category: 'housing' },
-
-    // Health
-    'GENERAL.HEALTH': { label: 'Poor General Health %', type: 'health_percentage', category: 'health' },
-    'POOR.PHYSICAL.HEALTH': { label: 'Poor Physical Health %', type: 'health_percentage', category: 'health' },
-    'POOR.MENTAL.HEALTH': { label: 'Poor Mental Health %', type: 'health_percentage', category: 'health' },
-    'HIGH.BLOOD.PRESSURE': { label: 'High Blood Pressure %', type: 'health_percentage', category: 'health' },
-    'BINGE.DRINKING': { label: 'Binge Drinking %', type: 'health_percentage', category: 'health' },
-    'CANCER..EXCLUDING.SKIN.CANCER.': { label: 'Cancer %', type: 'health_percentage', category: 'health' },
-    'ASTHMA': { label: 'Asthma %', type: 'health_percentage', category: 'health' },
-    'DIABETES': { label: 'Diabetes %', type: 'health_percentage', category: 'health' },
-    'CORONARY.HEART.DISEASE': { label: 'Coronary Heart Disease %', type: 'health_percentage', category: 'health' },
-    'OBESITY': { label: 'Obesity %', type: 'health_percentage', category: 'health' },
-    'DEPRESSION': { label: 'Depression %', type: 'health_percentage', category: 'health' },
+    'Rent_Burden_Ratio': { label: 'Rent Burden Ratio', type: 'count', category: 'housing' },
+    'Price_To_Income_Ratio': { label: 'Price to Income Ratio', type: 'count', category: 'housing' },
+    // Housing - Tenure
+    'Pct_Owner_Occupied': { label: 'Owner-Occupied %', type: 'percentage', category: 'housing' },
+    'Pct_Renter_Occupied': { label: 'Renter-Occupied %', type: 'percentage', category: 'housing' },
+    // Housing - Cost Burden
+    'Pct_Renters_Cost_Burdened_30_Plus': { label: 'Rent-Burdened 30%+ %', type: 'percentage', category: 'housing' },
+    'Pct_Owners_Cost_Burdened_30_Plus': { label: 'Owner Cost-Burdened 30%+ %', type: 'percentage', category: 'housing' },
+    'Pct_All_HH_Cost_Burdened_30_Plus': { label: 'All HH Cost-Burdened 30%+ %', type: 'percentage', category: 'housing' },
+    // Housing - Overcrowding
+    'Pct_All_HH_Overcrowded': { label: 'Overcrowded Households %', type: 'percentage', category: 'housing' },
+    // Housing - Aging in Place
+    'Pct_Owners_65_Plus': { label: 'Owners 65+ %', type: 'percentage', category: 'housing' },
+    // Housing - Density & Size
+    'housing_units_per_sqmi': { label: 'Housing Density (per sq mi)', type: 'count', category: 'housing' },
+    'Avg_Household_Size': { label: 'Avg Household Size', type: 'count', category: 'housing' },
+    // Housing - Stability
+    'Pct_Same_House_1_Year': { label: 'Same House 1 Year %', type: 'percentage', category: 'housing' },
 
     'rank': { label: 'Rank', type: 'rank', category: 'other' }
 };
@@ -191,26 +227,26 @@ function setupUI() {
 
 async function loadData() {
     try {
-        const response = await fetch('data/BR_Combined_Tract_Data.geojson');
+        const response = await fetch('Output Data/Cook_County_Housing_Veterans_Tract_2023.geojson');
         demographicsData = await response.json();
         console.log('Data loaded successfully:', demographicsData.features.length, 'features');
-        calculateParishTotals();
+        calculateCountyTotals();
         calculateRankings();
         initializeMap();
         initializeScatterPlot();
         initializeScatterplotsPanel();
 
-        // Initialize the tract details with parish totals
+        // Initialize the tract details with county totals
         // Need to render the DOM first, then populate with data
-        updateTractDetails(parishTotals, true);
+        updateTractDetails(countyTotals, true);
     } catch (error) {
         console.error('Error loading data:', error);
         showError('Failed to load demographics data. Please check your data file.');
     }
 }
 
-function calculateParishTotals() {
-    parishTotals = {
+function calculateCountyTotals() {
+    countyTotals = {
         Total_Population: 0,
         White_Alone: 0,
         Black_Alone: 0,
@@ -234,19 +270,19 @@ function calculateParishTotals() {
 
     demographicsData.features.forEach(feature => {
         const props = feature.properties;
-        parishTotals.Total_Population += props.Total_Population || 0;
-        parishTotals.White_Alone += props.White_Alone || 0;
-        parishTotals.Black_Alone += props.Black_Alone || 0;
-        parishTotals.Asian_Alone += props.Asian_Alone || 0;
-        parishTotals.Hispanic_Latino += props.Hispanic_Latino || 0;
-        parishTotals.Below_Poverty_Level += props.Below_Poverty_Level || 0;
-        parishTotals.Owner_Occupied += props.Owner_Occupied || 0;
-        parishTotals.Renter_Occupied += props.Renter_Occupied || 0;
-        parishTotals.Single_Family_Detached += props.Single_Family_Detached || 0;
-        parishTotals.Multi_Family_All_Units += props.Multi_Family_All_Units || 0;
-        parishTotals.Households_With_Children_Under_18 += props.Households_With_Children_Under_18 || 0;
-        parishTotals.Total_Households += props.Total_Households || 0;
-        parishTotals.Total_Housing_Units += props.Total_Housing_Units || 0;
+        countyTotals.Total_Population += props.Total_Population || 0;
+        countyTotals.White_Alone += props.White_Alone || 0;
+        countyTotals.Black_Alone += props.Black_Alone || 0;
+        countyTotals.Asian_Alone += props.Asian_Alone || 0;
+        countyTotals.Hispanic_Latino += props.Hispanic_Latino || 0;
+        countyTotals.Below_Poverty_Level += props.Below_Poverty_Level || 0;
+        countyTotals.Owner_Occupied += props.Owner_Occupied || 0;
+        countyTotals.Renter_Occupied += props.Renter_Occupied || 0;
+        countyTotals.Single_Family_Detached += props.Single_Family_Detached || 0;
+        countyTotals.Multi_Family_All_Units += props.Multi_Family_All_Units || 0;
+        countyTotals.Households_With_Children_Under_18 += props.Households_With_Children_Under_18 || 0;
+        countyTotals.Total_Households += props.Total_Households || 0;
+        countyTotals.Total_Housing_Units += props.Total_Housing_Units || 0;
 
         if (props.Median_Household_Income && props.Median_Household_Income > 0) {
             incomeSum += props.Median_Household_Income;
@@ -261,28 +297,40 @@ function calculateParishTotals() {
         }
     });
 
-    parishTotals.Percent_White = parishTotals.White_Alone / parishTotals.Total_Population;
-    parishTotals.Percent_Black = parishTotals.Black_Alone / parishTotals.Total_Population;
-    parishTotals.Percent_Asian = parishTotals.Asian_Alone / parishTotals.Total_Population;
-    parishTotals.Percent_Hispanic = parishTotals.Hispanic_Latino / parishTotals.Total_Population;
-    parishTotals.Percent_Below_Poverty = parishTotals.Below_Poverty_Level / parishTotals.Total_Population;
-    parishTotals.Median_Household_Income = incomeCount > 0 ? incomeSum / incomeCount : 0;
-    parishTotals.Percent_Built_Pre_1980 = housingUnitsCount > 0 ? (pre1980Sum / housingUnitsCount) : 0;
-    parishTotals.Percent_Built_2000_Plus = housingUnitsCount > 0 ? (post2000Sum / housingUnitsCount) : 0;
-    parishTotals.NAME = 'East Baton Rouge Parish';
+    countyTotals.Percent_White = countyTotals.White_Alone / countyTotals.Total_Population;
+    countyTotals.Percent_Black = countyTotals.Black_Alone / countyTotals.Total_Population;
+    countyTotals.Percent_Asian = countyTotals.Asian_Alone / countyTotals.Total_Population;
+    countyTotals.Percent_Hispanic = countyTotals.Hispanic_Latino / countyTotals.Total_Population;
+    countyTotals.Percent_Below_Poverty = countyTotals.Below_Poverty_Level / countyTotals.Total_Population;
+    countyTotals.Median_Household_Income = incomeCount > 0 ? incomeSum / incomeCount : 0;
+    countyTotals.Percent_Built_Pre_1980 = housingUnitsCount > 0 ? (pre1980Sum / housingUnitsCount) : 0;
+    countyTotals.Percent_Built_2000_Plus = housingUnitsCount > 0 ? (post2000Sum / housingUnitsCount) : 0;
+    countyTotals.NAME = 'Cook County, Illinois';
 
     // Calculate medians for lollipop chart variables
     const lollipopVars = [
-        'Median_Household_Income', 'Percent_Below_Poverty', 'Percent_Low_Income_Under_35K',
-        'Percent_High_Income_100K_Plus', 'Percent_White', 'Percent_Black', 'Percent_Hispanic',
-        'Percent_Family_Households', 'Percent_Households_With_Children', 'Percent_Children_Below_Poverty',
-        'crime_count',
-        'Median_Home_Value', 'Median_Gross_Rent', 'Percent_Renter_Occupied', 'Percent_Built_Pre_1980',
-        'Percent_High_Rent_Burden_30_Plus', 'PNP_Mean_Perc', 'PI_Mean_Perc', 'blight_count',
-        'Percent_Single_Family', 'Percent_Two_Plus_Bedrooms', 'permits_res_count',
-        'GENERAL.HEALTH', 'POOR.PHYSICAL.HEALTH', 'POOR.MENTAL.HEALTH', 'HIGH.BLOOD.PRESSURE',
-        'BINGE.DRINKING', 'CANCER..EXCLUDING.SKIN.CANCER.', 'ASTHMA', 'DIABETES',
-        'CORONARY.HEART.DISEASE', 'OBESITY', 'DEPRESSION'
+        // Veterans
+        'Vet_Total_Veterans', 'Pct_Veterans_Of_Adult_Pop', 'veterans_per_1000_pop',
+        'Pct_Veterans_Male', 'Pct_Veterans_Female',
+        'Pct_Veterans_18_34', 'Pct_Veterans_35_54', 'Pct_Veterans_55_64', 'Pct_Veterans_65_Plus',
+        'Pct_Veterans_Employed', 'Pct_Veterans_Unemployed', 'Vet_Median_Income_Veteran_Total',
+        'Pct_Vet_18_64_In_Poverty', 'Pct_Vet_65_Plus_In_Poverty', 'Pct_Vet_With_Service_Disability',
+        'Pct_With_TRICARE', 'Pct_With_VA_HealthCare',
+        // Economic Security
+        'Median_Household_Income', 'Pct_Below_Poverty', 'Low_Income_Under_35K', 'High_Income_100K_Plus',
+        'Pct_With_Health_Insurance', 'Pct_No_Health_Insurance', 'Pct_Employed_With_Insurance',
+        'Pct_With_Employer_Insurance', 'Pct_With_Medicare', 'Pct_With_Medicaid',
+        'Pct_HH_SNAP', 'Pct_HH_Public_Assistance', 'Pct_HH_With_Social_Security', 'Pct_HH_With_SSI',
+        'Pct_Bachelors_Plus', 'Pct_Less_Than_HS', 'Pct_With_Disability', 'Pct_HH_With_Broadband',
+        'Pct_Commute_60_Plus', 'Pct_Work_At_Home', 'Pct_HH_No_Vehicle',
+        // Housing
+        'Total_Housing_Units', 'Median_Home_Value', 'Median_Gross_Rent',
+        'Pct_Owner_Occupied', 'Pct_Renter_Occupied', 'Pct_Vacant',
+        'Pct_Single_Family', 'Pct_Multi_Family_5_Plus',
+        'Rent_Burden_Ratio', 'Price_To_Income_Ratio',
+        'Pct_Renters_Cost_Burdened_30_Plus', 'Pct_Owners_Cost_Burdened_30_Plus', 'Pct_All_HH_Cost_Burdened_30_Plus',
+        'Pct_All_HH_Overcrowded', 'Pct_Owners_65_Plus',
+        'housing_units_per_sqmi', 'Avg_Household_Size', 'Pct_Same_House_1_Year'
     ];
 
     lollipopVars.forEach(varName => {
@@ -295,16 +343,16 @@ function calculateParishTotals() {
             const median = values.length % 2 === 0
                 ? (values[values.length / 2 - 1] + values[values.length / 2]) / 2
                 : values[Math.floor(values.length / 2)];
-            parishTotals[varName] = median;
+            countyTotals[varName] = median;
         } else {
-            parishTotals[varName] = 0;
+            countyTotals[varName] = 0;
         }
     });
 }
 
 function calculateRankings() {
     tractRankings = {};
-    const metrics = ['Total_Population', 'Median_Household_Income', 'Percent_Below_Poverty'];
+    const metrics = ['Total_Population', 'Median_Household_Income', 'Pct_Below_Poverty'];
     
     metrics.forEach(metric => {
         const sorted = demographicsData.features
@@ -373,7 +421,7 @@ function setupEventListeners() {
                 updateLayer(currentLayer);
                 updateLegend(currentLayer);
                 updateScatterPlot();
-                if (!isFrozen) showParishTotals();
+                if (!isFrozen) showCountyTotals();
                 document.getElementById('layer-controls-panel').classList.remove('open');
             }
         });
@@ -434,20 +482,17 @@ function freeze(properties) {
     isFrozen = true;
     currentHoveredFeature = properties.GEOID;
     updateTractDetails(properties);
-    if (scatterPlot) scatterPlot.highlightBubble(properties.GEOID);
+    highlightBubbleInAllPlots(properties.GEOID);
     highlightMapFeature(properties.GEOID);
 }
 
 function unfreeze() {
     isFrozen = false;
     currentHoveredFeature = null;
-    showParishTotals();
+    showCountyTotals();
     clearMapHighlight();
     zoomToOriginalView();
-    if (scatterPlot) {
-        scatterPlot.clearHighlight();
-        scatterPlot.reorderBubbles();
-    }
+    clearHighlightInAllPlots();
 }
 
 function handleMapHover(e) {
@@ -457,7 +502,7 @@ function handleMapHover(e) {
         if (feature.properties.GEOID !== currentHoveredFeature) {
             currentHoveredFeature = feature.properties.GEOID;
             updateTractDetails(feature.properties);
-            if (scatterPlot) scatterPlot.highlightBubble(feature.properties.GEOID);
+            highlightBubbleInAllPlots(feature.properties.GEOID);
 
             // Update popup content
             const props = feature.properties;
@@ -528,12 +573,9 @@ function updatePopupPosition(e) {
 function handleMapLeave() {
     if (isFrozen) return;
     currentHoveredFeature = null;
-    showParishTotals();
+    showCountyTotals();
     clearMapHighlight();
-    if (scatterPlot) {
-        scatterPlot.clearHighlight();
-        scatterPlot.reorderBubbles();
-    }
+    clearHighlightInAllPlots();
     map.getCanvas().style.cursor = '';
 
     // Remove popup
@@ -542,13 +584,13 @@ function handleMapLeave() {
     }
 }
 
-function showParishTotals() {
-    updateTractDetails(parishTotals, true);
+function showCountyTotals() {
+    updateTractDetails(countyTotals, true);
 }
 
-function updateTractDetails(properties, isParishView = false) {
+function updateTractDetails(properties, isCountyView = false) {
     const tractInfo = document.getElementById('tract-info');
-    const rankings = isParishView ? {} : (tractRankings[properties.GEOID] || {});
+    const rankings = isCountyView ? {} : (tractRankings[properties.GEOID] || {});
     const totalTracts = demographicsData.features.length;
     const chartsExist = tractInfo.querySelector('#race-chart') !== null;
 
@@ -559,16 +601,16 @@ function updateTractDetails(properties, isParishView = false) {
         tractInfo.innerHTML = `
             <div class="tract-summary-stats">
                 <div class="summary-stat-box">
-                    <div class="summary-stat-value" id="total-pop-value">${Number(properties.Total_Population).toLocaleString()} <span class="inline-rank" id="total-pop-rank">${rankings.Total_Population ? `#${rankings.Total_Population}` : ''}</span></div>
+                    <div class="summary-stat-value" id="total-pop-value">${Number(properties.Total_Population || 0).toLocaleString()} <span class="inline-rank" id="total-pop-rank">${rankings.Total_Population ? `#${rankings.Total_Population}` : ''}</span></div>
                     <div class="summary-stat-label">Total Population</div>
                 </div>
                 <div class="summary-stat-box">
-                    <div class="summary-stat-value" id="median-income-value">$${Number(properties.Median_Household_Income).toLocaleString()} <span class="inline-rank" id="median-income-rank">${rankings.Median_Household_Income ? `#${rankings.Median_Household_Income}` : ''}</span></div>
-                    <div class="summary-stat-label">Median Income</div>
+                    <div class="summary-stat-value" id="vet-total-value">${Number(properties.Vet_Total_Veterans || 0).toLocaleString()} <span class="inline-rank" id="vet-total-rank">${rankings.Vet_Total_Veterans ? `#${rankings.Vet_Total_Veterans}` : ''}</span></div>
+                    <div class="summary-stat-label">Total Veterans</div>
                 </div>
                 <div class="summary-stat-box">
-                    <div class="summary-stat-value" id="poverty-value">${(properties.Percent_Below_Poverty ).toFixed(1)}% <span class="inline-rank" id="poverty-rank">${rankings.Percent_Below_Poverty ? `#${rankings.Percent_Below_Poverty}` : ''}</span></div>
-                    <div class="summary-stat-label">Below Poverty</div>
+                    <div class="summary-stat-value" id="median-income-value">$${Number(properties.Median_Household_Income || 0).toLocaleString()} <span class="inline-rank" id="median-income-rank">${rankings.Median_Household_Income ? `#${rankings.Median_Household_Income}` : ''}</span></div>
+                    <div class="summary-stat-label">Median Income</div>
                 </div>
             </div>
 
@@ -579,13 +621,64 @@ function updateTractDetails(properties, isParishView = false) {
             <!-- Tabbed Section -->
             <div class="tabs-container">
                 <div class="tabs-header">
-                    <button class="tab-btn active" data-tab="demographics">Demographics</button>
+                    <button class="tab-btn active" data-tab="veterans">Veterans</button>
+                    <button class="tab-btn" data-tab="economic">Economic</button>
                     <button class="tab-btn" data-tab="housing">Housing</button>
-                    <button class="tab-btn" data-tab="health">Health</button>
                 </div>
 
                 <div class="tabs-content">
-                    <div class="tab-pane active" id="tab-demographics">
+                    <div class="tab-pane active" id="tab-veterans">
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Total Veterans</div>
+                            <div class="chart-container-inline" id="vet-total-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans % of Adults</div>
+                            <div class="chart-container-inline" id="vet-pct-adult-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans per 1,000</div>
+                            <div class="chart-container-inline" id="vet-per-1000-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Male Veterans %</div>
+                            <div class="chart-container-inline" id="vet-male-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Female Veterans %</div>
+                            <div class="chart-container-inline" id="vet-female-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans 18-34 %</div>
+                            <div class="chart-container-inline" id="vet-18-34-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans 35-54 %</div>
+                            <div class="chart-container-inline" id="vet-35-54-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans 55-64 %</div>
+                            <div class="chart-container-inline" id="vet-55-64-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans 65+ %</div>
+                            <div class="chart-container-inline" id="vet-65-plus-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veterans Employed %</div>
+                            <div class="chart-container-inline" id="vet-employed-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Veteran Median Income</div>
+                            <div class="chart-container-inline" id="vet-median-income-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Service-Connected Disability %</div>
+                            <div class="chart-container-inline" id="vet-service-disability-chart"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="tab-economic">
                         <div class="chart-section inline-chart">
                             <div class="chart-title-inline">Median Income</div>
                             <div class="chart-container-inline" id="median-income-chart"></div>
@@ -595,44 +688,52 @@ function updateTractDetails(properties, isParishView = false) {
                             <div class="chart-container-inline" id="below-poverty-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Low Income</div>
+                            <div class="chart-title-inline">Low Income Count</div>
                             <div class="chart-container-inline" id="low-income-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% High Income</div>
+                            <div class="chart-title-inline">High Income Count</div>
                             <div class="chart-container-inline" id="high-income-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% White</div>
-                            <div class="chart-container-inline" id="white-chart"></div>
+                            <div class="chart-title-inline">With Insurance %</div>
+                            <div class="chart-container-inline" id="with-insurance-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Black</div>
-                            <div class="chart-container-inline" id="black-chart"></div>
+                            <div class="chart-title-inline">Without Insurance %</div>
+                            <div class="chart-container-inline" id="no-insurance-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Hispanic</div>
-                            <div class="chart-container-inline" id="hispanic-chart"></div>
+                            <div class="chart-title-inline">SNAP %</div>
+                            <div class="chart-container-inline" id="snap-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Family Households</div>
-                            <div class="chart-container-inline" id="family-households-chart"></div>
+                            <div class="chart-title-inline">Public Assistance %</div>
+                            <div class="chart-container-inline" id="public-assist-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% With Children</div>
-                            <div class="chart-container-inline" id="households-children-chart"></div>
+                            <div class="chart-title-inline">Bachelor's+ %</div>
+                            <div class="chart-container-inline" id="bachelors-plus-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Children in Poverty</div>
-                            <div class="chart-container-inline" id="children-poverty-chart"></div>
+                            <div class="chart-title-inline">Less than HS %</div>
+                            <div class="chart-container-inline" id="less-than-hs-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Crime Count</div>
-                            <div class="chart-container-inline" id="crime-count-chart"></div>
+                            <div class="chart-title-inline">Commute 60+ Min %</div>
+                            <div class="chart-container-inline" id="long-commute-chart"></div>
+                        </div>
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">No Vehicle %</div>
+                            <div class="chart-container-inline" id="no-vehicle-chart"></div>
                         </div>
                     </div>
 
                     <div class="tab-pane" id="tab-housing">
+                        <div class="chart-section inline-chart">
+                            <div class="chart-title-inline">Total Housing Units</div>
+                            <div class="chart-container-inline" id="housing-units-chart"></div>
+                        </div>
                         <div class="chart-section inline-chart">
                             <div class="chart-title-inline">Median Home Value</div>
                             <div class="chart-container-inline" id="median-home-value-chart"></div>
@@ -642,87 +743,40 @@ function updateTractDetails(properties, isParishView = false) {
                             <div class="chart-container-inline" id="median-rent-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Renter</div>
-                            <div class="chart-container-inline" id="renter-chart"></div>
+                            <div class="chart-title-inline">% Owner Occupied</div>
+                            <div class="chart-container-inline" id="owner-pct-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Pre-1980</div>
-                            <div class="chart-container-inline" id="pre1980-chart"></div>
+                            <div class="chart-title-inline">% Renter Occupied</div>
+                            <div class="chart-container-inline" id="renter-pct-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Rent Burden 30+</div>
-                            <div class="chart-container-inline" id="rent-burden-30-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Poor Perception</div>
-                            <div class="chart-container-inline" id="pnp-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Poor Conditions</div>
-                            <div class="chart-container-inline" id="pi-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Blight Count</div>
-                            <div class="chart-container-inline" id="blight-chart"></div>
+                            <div class="chart-title-inline">Vacancy Rate %</div>
+                            <div class="chart-container-inline" id="vacancy-rate-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
                             <div class="chart-title-inline">% Single Family</div>
                             <div class="chart-container-inline" id="single-family-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">% Two+ Bedrooms</div>
-                            <div class="chart-container-inline" id="two-plus-bedrooms-chart"></div>
+                            <div class="chart-title-inline">% Multi-Family 5+</div>
+                            <div class="chart-container-inline" id="multi-family-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Building Permits</div>
-                            <div class="chart-container-inline" id="permits-chart"></div>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane" id="tab-health">
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Poor General Health</div>
-                            <div class="chart-container-inline" id="general-health-chart"></div>
+                            <div class="chart-title-inline">Rent Burden Ratio</div>
+                            <div class="chart-container-inline" id="rent-burden-ratio-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Poor Physical Health</div>
-                            <div class="chart-container-inline" id="poor-physical-chart"></div>
+                            <div class="chart-title-inline">Price/Income Ratio</div>
+                            <div class="chart-container-inline" id="price-income-ratio-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Poor Mental Health</div>
-                            <div class="chart-container-inline" id="poor-mental-chart"></div>
+                            <div class="chart-title-inline">Housing Density</div>
+                            <div class="chart-container-inline" id="density-chart"></div>
                         </div>
                         <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">High Blood Pressure</div>
-                            <div class="chart-container-inline" id="hbp-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Binge Drinking</div>
-                            <div class="chart-container-inline" id="binge-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Cancer (excl. skin)</div>
-                            <div class="chart-container-inline" id="cancer-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Asthma</div>
-                            <div class="chart-container-inline" id="asthma-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Diabetes</div>
-                            <div class="chart-container-inline" id="diabetes-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Coronary Heart Disease</div>
-                            <div class="chart-container-inline" id="chd-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Obesity</div>
-                            <div class="chart-container-inline" id="obesity-chart"></div>
-                        </div>
-                        <div class="chart-section inline-chart">
-                            <div class="chart-title-inline">Depression</div>
-                            <div class="chart-container-inline" id="depression-chart"></div>
+                            <div class="chart-title-inline">Avg Household Size</div>
+                            <div class="chart-container-inline" id="household-size-chart"></div>
                         </div>
                     </div>
                 </div>
@@ -732,79 +786,89 @@ function updateTractDetails(properties, isParishView = false) {
         // Setup tab switching
         setupTabs();
 
-        // Create charts
+        // Create charts for Veterans tab (default)
         createRaceChart(properties);
+        createVetTotalChart(properties);
+        createVetPctAdultChart(properties);
+        createVetPer1000Chart(properties);
+        createVetMaleChart(properties);
+        createVetFemaleChart(properties);
+        createVet18_34Chart(properties);
+        createVet35_54Chart(properties);
+        createVet55_64Chart(properties);
+        createVet65PlusChart(properties);
+        createVetEmployedChart(properties);
+        createVetMedianIncomeChart(properties);
+        createVetServiceDisabilityChart(properties);
+
+        // Create charts for Economic tab
         createMedianIncomeChart(properties);
         createBelowPovertyChart(properties);
         createLowIncomeChart(properties);
         createHighIncomeChart(properties);
-        createWhiteChart(properties);
-        createBlackChart(properties);
-        createHispanicChart(properties);
-        createFamilyHouseholdsChart(properties);
-        createHouseholdsWithChildrenChart(properties);
-        createChildrenPovertyChart(properties);
-        createCrimeCountChart(properties);
+        createWithInsuranceChart(properties);
+        createNoInsuranceChart(properties);
+        createSNAPChart(properties);
+        createPublicAssistChart(properties);
+        createBachelorsPlusChart(properties);
+        createLessThanHSChart(properties);
+        createLongCommuteChart(properties);
+        createNoVehicleChart(properties);
+
+        // Create charts for Housing tab
+        createHousingUnitsChart(properties);
         createMedianHomeValueChart(properties);
         createMedianRentChart(properties);
+        createOwnerPctChart(properties);
         createRenterPctChart(properties);
-        createPre1980Chart(properties);
-        createRentBurden30Chart(properties);
-        createPNPChart(properties);
-        createPIChart(properties);
-        createBlightCountChart(properties);
+        createVacancyRateChart(properties);
         createSingleFamilyPctChart(properties);
-        createTwoPlusBedroomsChart(properties);
-        createPermitsChart(properties);
-        createGeneralHealthChart(properties);
-        createPoorPhysicalHealthChart(properties);
-        createPoorMentalHealthChart(properties);
-        createHighBloodPressureChart(properties);
-        createBingeDrinkingChart(properties);
-        createCancerChart(properties);
-        createAsthmaChart(properties);
-        createDiabetesChart(properties);
-        createCoronaryHeartDiseaseChart(properties);
-        createObesityChart(properties);
-        createDepressionChart(properties);
+        createMultiFamilyChart(properties);
+        createRentBurdenRatioChart(properties);
+        createPriceIncomeRatioChart(properties);
+        createDensityChart(properties);
+        createHouseholdSizeChart(properties);
     } else {
-        document.getElementById('total-pop-value').innerHTML = `${Number(properties.Total_Population).toLocaleString()} <span class="inline-rank" id="total-pop-rank">${rankings.Total_Population ? `#${rankings.Total_Population}` : ''}</span>`;
-        document.getElementById('median-income-value').innerHTML = `$${Number(properties.Median_Household_Income).toLocaleString()} <span class="inline-rank" id="median-income-rank">${rankings.Median_Household_Income ? `#${rankings.Median_Household_Income}` : ''}</span>`;
-        document.getElementById('poverty-value').innerHTML = `${(properties.Percent_Below_Poverty ).toFixed(1)}% <span class="inline-rank" id="poverty-rank">${rankings.Percent_Below_Poverty ? `#${rankings.Percent_Below_Poverty}` : ''}</span>`;
+        document.getElementById('total-pop-value').innerHTML = `${Number(properties.Total_Population || 0).toLocaleString()} <span class="inline-rank" id="total-pop-rank">${rankings.Total_Population ? `#${rankings.Total_Population}` : ''}</span>`;
+        document.getElementById('vet-total-value').innerHTML = `${Number(properties.Vet_Total_Veterans || 0).toLocaleString()} <span class="inline-rank" id="vet-total-rank">${rankings.Vet_Total_Veterans ? `#${rankings.Vet_Total_Veterans}` : ''}</span>`;
+        document.getElementById('median-income-value').innerHTML = `$${Number(properties.Median_Household_Income || 0).toLocaleString()} <span class="inline-rank" id="median-income-rank">${rankings.Median_Household_Income ? `#${rankings.Median_Household_Income}` : ''}</span>`;
         createRaceChart(properties);
+        createVetTotalChart(properties);
+        createVetPctAdultChart(properties);
+        createVetPer1000Chart(properties);
+        createVetMaleChart(properties);
+        createVetFemaleChart(properties);
+        createVet18_34Chart(properties);
+        createVet35_54Chart(properties);
+        createVet55_64Chart(properties);
+        createVet65PlusChart(properties);
+        createVetEmployedChart(properties);
+        createVetMedianIncomeChart(properties);
+        createVetServiceDisabilityChart(properties);
         createMedianIncomeChart(properties);
         createBelowPovertyChart(properties);
         createLowIncomeChart(properties);
         createHighIncomeChart(properties);
-        createWhiteChart(properties);
-        createBlackChart(properties);
-        createHispanicChart(properties);
-        createFamilyHouseholdsChart(properties);
-        createHouseholdsWithChildrenChart(properties);
-        createChildrenPovertyChart(properties);
-        createCrimeCountChart(properties);
+        createWithInsuranceChart(properties);
+        createNoInsuranceChart(properties);
+        createSNAPChart(properties);
+        createPublicAssistChart(properties);
+        createBachelorsPlusChart(properties);
+        createLessThanHSChart(properties);
+        createLongCommuteChart(properties);
+        createNoVehicleChart(properties);
+        createHousingUnitsChart(properties);
         createMedianHomeValueChart(properties);
         createMedianRentChart(properties);
+        createOwnerPctChart(properties);
         createRenterPctChart(properties);
-        createPre1980Chart(properties);
-        createRentBurden30Chart(properties);
-        createPNPChart(properties);
-        createPIChart(properties);
-        createBlightCountChart(properties);
+        createVacancyRateChart(properties);
         createSingleFamilyPctChart(properties);
-        createTwoPlusBedroomsChart(properties);
-        createPermitsChart(properties);
-        createGeneralHealthChart(properties);
-        createPoorPhysicalHealthChart(properties);
-        createPoorMentalHealthChart(properties);
-        createHighBloodPressureChart(properties);
-        createBingeDrinkingChart(properties);
-        createCancerChart(properties);
-        createAsthmaChart(properties);
-        createDiabetesChart(properties);
-        createCoronaryHeartDiseaseChart(properties);
-        createObesityChart(properties);
-        createDepressionChart(properties);
+        createMultiFamilyChart(properties);
+        createRentBurdenRatioChart(properties);
+        createPriceIncomeRatioChart(properties);
+        createDensityChart(properties);
+        createHouseholdSizeChart(properties);
     }
 }
 
@@ -836,52 +900,55 @@ function setupTabs() {
             });
             showScatterplotsForCategory(targetTab);
 
-            // Re-render demographics charts when demographics tab is activated
-            if (targetTab === 'demographics') {
-                const currentProperties = window.currentTractProperties || parishTotals;
+            // Re-render veterans charts when veterans tab is activated
+            if (targetTab === 'veterans') {
+                const currentProperties = window.currentTractProperties || countyTotals;
+                createVetTotalChart(currentProperties);
+                createVetPctAdultChart(currentProperties);
+                createVetPer1000Chart(currentProperties);
+                createVetMaleChart(currentProperties);
+                createVetFemaleChart(currentProperties);
+                createVet18_34Chart(currentProperties);
+                createVet35_54Chart(currentProperties);
+                createVet55_64Chart(currentProperties);
+                createVet65PlusChart(currentProperties);
+                createVetEmployedChart(currentProperties);
+                createVetMedianIncomeChart(currentProperties);
+                createVetServiceDisabilityChart(currentProperties);
+            }
+
+            // Re-render economic charts when economic tab is activated
+            if (targetTab === 'economic') {
+                const currentProperties = window.currentTractProperties || countyTotals;
                 createMedianIncomeChart(currentProperties);
                 createBelowPovertyChart(currentProperties);
                 createLowIncomeChart(currentProperties);
                 createHighIncomeChart(currentProperties);
-                createWhiteChart(currentProperties);
-                createBlackChart(currentProperties);
-                createHispanicChart(currentProperties);
-                createFamilyHouseholdsChart(currentProperties);
-                createHouseholdsWithChildrenChart(currentProperties);
-                createChildrenPovertyChart(currentProperties);
-                createCrimeCountChart(currentProperties);
+                createWithInsuranceChart(currentProperties);
+                createNoInsuranceChart(currentProperties);
+                createSNAPChart(currentProperties);
+                createPublicAssistChart(currentProperties);
+                createBachelorsPlusChart(currentProperties);
+                createLessThanHSChart(currentProperties);
+                createLongCommuteChart(currentProperties);
+                createNoVehicleChart(currentProperties);
             }
 
             // Re-render housing charts when housing tab is activated
             if (targetTab === 'housing') {
-                const currentProperties = window.currentTractProperties || parishTotals;
+                const currentProperties = window.currentTractProperties || countyTotals;
+                createHousingUnitsChart(currentProperties);
                 createMedianHomeValueChart(currentProperties);
                 createMedianRentChart(currentProperties);
+                createOwnerPctChart(currentProperties);
                 createRenterPctChart(currentProperties);
-                createPre1980Chart(currentProperties);
-                createRentBurden30Chart(currentProperties);
-                createPNPChart(currentProperties);
-                createPIChart(currentProperties);
-                createBlightCountChart(currentProperties);
+                createVacancyRateChart(currentProperties);
                 createSingleFamilyPctChart(currentProperties);
-                createTwoPlusBedroomsChart(currentProperties);
-                createPermitsChart(currentProperties);
-            }
-
-            // Re-render health charts when health tab is activated
-            if (targetTab === 'health') {
-                const currentProperties = window.currentTractProperties || parishTotals;
-                createGeneralHealthChart(currentProperties);
-                createPoorPhysicalHealthChart(currentProperties);
-                createPoorMentalHealthChart(currentProperties);
-                createHighBloodPressureChart(currentProperties);
-                createBingeDrinkingChart(currentProperties);
-                createCancerChart(currentProperties);
-                createAsthmaChart(currentProperties);
-                createDiabetesChart(currentProperties);
-                createCoronaryHeartDiseaseChart(currentProperties);
-                createObesityChart(currentProperties);
-                createDepressionChart(currentProperties);
+                createMultiFamilyChart(currentProperties);
+                createRentBurdenRatioChart(currentProperties);
+                createPriceIncomeRatioChart(currentProperties);
+                createDensityChart(currentProperties);
+                createHouseholdSizeChart(currentProperties);
             }
         });
     });
@@ -921,8 +988,8 @@ function createLollipopChart(container, value, property, chartType = 'housing') 
     const height = containerNode.clientHeight;
 
     // Determine if this is a count variable (not a percentage)
-    const isCurrencyVariable = property === 'Median_Household_Income' || property === 'Median_Home_Value' || property === 'Median_Gross_Rent';
-    const isCountVariable = property === 'blight_count' || property === 'permits_res_count' || property === 'crime_count' || isCurrencyVariable;
+    const isCurrencyVariable = property === 'Median_Household_Income' || property === 'Median_Home_Value' || property === 'Median_Gross_Rent' || property === 'Vet_Median_Income_Veteran_Total';
+    const isCountVariable = property === 'Vet_Total_Veterans' || property === 'veterans_per_1000_pop' || property === 'Low_Income_Under_35K' || property === 'High_Income_100K_Plus' || property === 'Total_Housing_Units' || property === 'housing_units_per_sqmi' || isCurrencyVariable;
 
     // Get min/max/median from all features for this property
     const allValues = demographicsData.features
@@ -978,12 +1045,18 @@ function createLollipopChart(container, value, property, chartType = 'housing') 
 
     // Get color based on value and chart type
     let colors;
-    if (chartType === 'health') {
-        colors = CONFIG.colors.health;
-    } else if (chartType === 'demographics') {
-        colors = CONFIG.colors.demographics;
-    } else {
+    if (chartType === 'veterans') {
+        colors = CONFIG.colors.veterans;
+    } else if (chartType === 'economic') {
+        colors = CONFIG.colors.economic;
+    } else if (chartType === 'housing') {
         colors = CONFIG.colors.housing;
+    } else if (chartType === 'demographics') {
+        colors = CONFIG.colors.economic; // fallback to economic for old demographics
+    } else if (chartType === 'health') {
+        colors = CONFIG.colors.economic; // fallback to economic for old health
+    } else {
+        colors = CONFIG.colors.housing; // default
     }
     const colorScale = d3.scaleQuantize()
         .domain([minValue, maxValue])
@@ -1174,15 +1247,15 @@ function createBarChart(container, data, chartType = 'race') {
 }
 
 function createRenterPctChart(properties) {
-    const container = d3.select('#renter-chart');
-    const renterPct = properties.Percent_Renter_Occupied || 0;
-    createLollipopChart(container, renterPct, 'Percent_Renter_Occupied', 'housing');
+    const container = d3.select('#renter-pct-chart');
+    const renterPct = properties.Pct_Renter_Occupied || 0;
+    createLollipopChart(container, renterPct, 'Pct_Renter_Occupied', 'housing');
 }
 
 function createSingleFamilyPctChart(properties) {
     const container = d3.select('#single-family-chart');
-    const singlePct = properties.Percent_Single_Family || 0;
-    createLollipopChart(container, singlePct, 'Percent_Single_Family', 'housing');
+    const singlePct = properties.Pct_Single_Family || 0;
+    createLollipopChart(container, singlePct, 'Pct_Single_Family', 'housing');
 }
 
 function createPre1980Chart(properties) {
@@ -1296,7 +1369,7 @@ function createPoorMentalHealthChart(properties) {
 function createMedianIncomeChart(properties) {
     const container = d3.select('#median-income-chart');
     const value = properties.Median_Household_Income || 0;
-    createLollipopChart(container, value, 'Median_Household_Income', 'demographics');
+    createLollipopChart(container, value, 'Median_Household_Income', 'economic');
 }
 
 function createWhiteChart(properties) {
@@ -1319,20 +1392,20 @@ function createHispanicChart(properties) {
 
 function createLowIncomeChart(properties) {
     const container = d3.select('#low-income-chart');
-    const value = parseFloat(properties.Percent_Low_Income_Under_35K) || 0;
-    createLollipopChart(container, value, 'Percent_Low_Income_Under_35K', 'demographics');
+    const value = parseFloat(properties.Low_Income_Under_35K) || 0;
+    createLollipopChart(container, value, 'Low_Income_Under_35K', 'economic');
 }
 
 function createHighIncomeChart(properties) {
     const container = d3.select('#high-income-chart');
-    const value = parseFloat(properties.Percent_High_Income_100K_Plus) || 0;
-    createLollipopChart(container, value, 'Percent_High_Income_100K_Plus', 'demographics');
+    const value = parseFloat(properties.High_Income_100K_Plus) || 0;
+    createLollipopChart(container, value, 'High_Income_100K_Plus', 'economic');
 }
 
 function createBelowPovertyChart(properties) {
     const container = d3.select('#below-poverty-chart');
-    const value = parseFloat(properties.Percent_Below_Poverty) || 0;
-    createLollipopChart(container, value, 'Percent_Below_Poverty', 'demographics');
+    const value = parseFloat(properties.Pct_Below_Poverty) || 0;
+    createLollipopChart(container, value, 'Pct_Below_Poverty', 'economic');
 }
 
 function createFamilyHouseholdsChart(properties) {
@@ -1678,43 +1751,46 @@ function initializeScatterplotsPanel() {
             });
 
             // Re-render sidebar charts for the selected category
-            const currentProperties = window.currentTractProperties || parishTotals;
-            if (category === 'demographics') {
+            const currentProperties = window.currentTractProperties || countyTotals;
+            if (category === 'veterans') {
+                createVetTotalChart(currentProperties);
+                createVetPctAdultChart(currentProperties);
+                createVetPer1000Chart(currentProperties);
+                createVetMaleChart(currentProperties);
+                createVetFemaleChart(currentProperties);
+                createVet18_34Chart(currentProperties);
+                createVet35_54Chart(currentProperties);
+                createVet55_64Chart(currentProperties);
+                createVet65PlusChart(currentProperties);
+                createVetEmployedChart(currentProperties);
+                createVetMedianIncomeChart(currentProperties);
+                createVetServiceDisabilityChart(currentProperties);
+            } else if (category === 'economic') {
                 createMedianIncomeChart(currentProperties);
                 createBelowPovertyChart(currentProperties);
                 createLowIncomeChart(currentProperties);
                 createHighIncomeChart(currentProperties);
-                createWhiteChart(currentProperties);
-                createBlackChart(currentProperties);
-                createHispanicChart(currentProperties);
-                createFamilyHouseholdsChart(currentProperties);
-                createHouseholdsWithChildrenChart(currentProperties);
-                createChildrenPovertyChart(currentProperties);
-                createCrimeCountChart(currentProperties);
+                createWithInsuranceChart(currentProperties);
+                createNoInsuranceChart(currentProperties);
+                createSNAPChart(currentProperties);
+                createPublicAssistChart(currentProperties);
+                createBachelorsPlusChart(currentProperties);
+                createLessThanHSChart(currentProperties);
+                createLongCommuteChart(currentProperties);
+                createNoVehicleChart(currentProperties);
             } else if (category === 'housing') {
+                createHousingUnitsChart(currentProperties);
                 createMedianHomeValueChart(currentProperties);
                 createMedianRentChart(currentProperties);
+                createOwnerPctChart(currentProperties);
                 createRenterPctChart(currentProperties);
-                createPre1980Chart(currentProperties);
-                createRentBurden30Chart(currentProperties);
-                createPNPChart(currentProperties);
-                createPIChart(currentProperties);
-                createBlightCountChart(currentProperties);
+                createVacancyRateChart(currentProperties);
                 createSingleFamilyPctChart(currentProperties);
-                createTwoPlusBedroomsChart(currentProperties);
-                createPermitsChart(currentProperties);
-            } else if (category === 'health') {
-                createGeneralHealthChart(currentProperties);
-                createPoorPhysicalHealthChart(currentProperties);
-                createPoorMentalHealthChart(currentProperties);
-                createHighBloodPressureChart(currentProperties);
-                createBingeDrinkingChart(currentProperties);
-                createCancerChart(currentProperties);
-                createAsthmaChart(currentProperties);
-                createDiabetesChart(currentProperties);
-                createCoronaryHeartDiseaseChart(currentProperties);
-                createObesityChart(currentProperties);
-                createDepressionChart(currentProperties);
+                createMultiFamilyChart(currentProperties);
+                createRentBurdenRatioChart(currentProperties);
+                createPriceIncomeRatioChart(currentProperties);
+                createDensityChart(currentProperties);
+                createHouseholdSizeChart(currentProperties);
             }
 
             // Show/hide scatterplots based on category
@@ -1732,48 +1808,47 @@ function createAllScatterplots() {
 
     // Define variables by category
     const variablesByCategory = {
-        demographics: [
-            { var: 'Total_Population', label: 'Total Population', category: 'demographics' },
-            { var: 'Median_Household_Income', label: 'Median Household Income', category: 'demographics' },
-            { var: 'Percent_Below_Poverty', label: 'Below Poverty %', category: 'demographics' },
-            { var: 'Percent_Low_Income_Under_35K', label: 'Low Income % (<$35K)', category: 'demographics' },
-            { var: 'Percent_High_Income_100K_Plus', label: 'High Income % ($100K+)', category: 'demographics' },
-            { var: 'Percent_White', label: 'White %', category: 'demographics' },
-            { var: 'Percent_Black', label: 'Black %', category: 'demographics' },
-            { var: 'Percent_Hispanic', label: 'Hispanic/Latino %', category: 'demographics' },
-            { var: 'Percent_Family_Households', label: 'Family Households %', category: 'demographics' },
-            { var: 'Percent_Households_With_Children', label: 'Households With Children %', category: 'demographics' },
-            { var: 'Percent_Children_Below_Poverty', label: 'Children in Poverty %', category: 'demographics' },
-            { var: 'crime_count', label: 'Crime Count', category: 'demographics' }
+        veterans: [
+            { var: 'Vet_Total_Veterans', label: 'Total Veterans', category: 'veterans' },
+            { var: 'Pct_Veterans_Of_Adult_Pop', label: 'Veterans % of Adults', category: 'veterans' },
+            { var: 'veterans_per_1000_pop', label: 'Veterans per 1,000 Pop', category: 'veterans' },
+            { var: 'Pct_Veterans_Male', label: 'Male Veterans %', category: 'veterans' },
+            { var: 'Pct_Veterans_Female', label: 'Female Veterans %', category: 'veterans' },
+            { var: 'Pct_Veterans_18_34', label: 'Veterans 18-34 %', category: 'veterans' },
+            { var: 'Pct_Veterans_35_54', label: 'Veterans 35-54 %', category: 'veterans' },
+            { var: 'Pct_Veterans_55_64', label: 'Veterans 55-64 %', category: 'veterans' },
+            { var: 'Pct_Veterans_65_Plus', label: 'Veterans 65+ %', category: 'veterans' },
+            { var: 'Pct_Veterans_Employed', label: 'Veterans Employed %', category: 'veterans' },
+            { var: 'Vet_Median_Income_Veteran_Total', label: 'Veteran Median Income', category: 'veterans' },
+            { var: 'Pct_Vet_With_Service_Disability', label: 'Service-Connected Disability %', category: 'veterans' }
+        ],
+        economic: [
+            { var: 'Median_Household_Income', label: 'Median Household Income', category: 'economic' },
+            { var: 'Pct_Below_Poverty', label: 'Below Poverty %', category: 'economic' },
+            { var: 'Low_Income_Under_35K', label: 'Low Income (<$35K)', category: 'economic' },
+            { var: 'High_Income_100K_Plus', label: 'High Income ($100K+)', category: 'economic' },
+            { var: 'Pct_With_Health_Insurance', label: 'With Health Insurance %', category: 'economic' },
+            { var: 'Pct_No_Health_Insurance', label: 'Without Health Insurance %', category: 'economic' },
+            { var: 'Pct_HH_SNAP', label: 'Households on SNAP %', category: 'economic' },
+            { var: 'Pct_HH_Public_Assistance', label: 'Public Assistance %', category: 'economic' },
+            { var: 'Pct_Bachelors_Plus', label: 'Bachelor\'s Degree+ %', category: 'economic' },
+            { var: 'Pct_Less_Than_HS', label: 'Less than High School %', category: 'economic' },
+            { var: 'Pct_With_Disability', label: 'With Disability %', category: 'economic' },
+            { var: 'Pct_HH_No_Vehicle', label: 'No Vehicle %', category: 'economic' }
         ],
         housing: [
+            { var: 'Total_Housing_Units', label: 'Total Housing Units', category: 'housing' },
             { var: 'Median_Home_Value', label: 'Median Home Value', category: 'housing' },
             { var: 'Median_Gross_Rent', label: 'Median Gross Rent', category: 'housing' },
-            { var: 'Percent_Renter_Occupied', label: 'Renter-Occupied %', category: 'housing' },
-            { var: 'Percent_Owner_Occupied', label: 'Owner-Occupied %', category: 'housing' },
-            { var: 'Percent_Vacant', label: 'Vacancy Rate %', category: 'housing' },
-            { var: 'Percent_Built_Pre_1980', label: 'Built Pre-1980 %', category: 'housing' },
-            { var: 'Percent_High_Rent_Burden_30_Plus', label: 'Rent Burden 30%+', category: 'housing' },
-            { var: 'Percent_High_Rent_Burden_50_Plus', label: 'Rent Burden 50%+', category: 'housing' },
-            { var: 'PNP_Mean_Perc', label: 'Poor Perception %', category: 'housing' },
-            { var: 'PI_Mean_Perc', label: 'Poor Conditions %', category: 'housing' },
-            { var: 'blight_count', label: 'Blight Count', category: 'housing' },
-            { var: 'Percent_Single_Family', label: 'Single-Family %', category: 'housing' },
-            { var: 'Percent_Two_Plus_Bedrooms', label: 'Two+ Bedrooms %', category: 'housing' },
-            { var: 'permits_res_count', label: 'Building Permits', category: 'housing' }
-        ],
-        health: [
-            { var: 'GENERAL.HEALTH', label: 'Poor General Health %', category: 'health' },
-            { var: 'POOR.PHYSICAL.HEALTH', label: 'Poor Physical Health %', category: 'health' },
-            { var: 'POOR.MENTAL.HEALTH', label: 'Poor Mental Health %', category: 'health' },
-            { var: 'HIGH.BLOOD.PRESSURE', label: 'High Blood Pressure %', category: 'health' },
-            { var: 'BINGE.DRINKING', label: 'Binge Drinking %', category: 'health' },
-            { var: 'CANCER..EXCLUDING.SKIN.CANCER.', label: 'Cancer %', category: 'health' },
-            { var: 'ASTHMA', label: 'Asthma %', category: 'health' },
-            { var: 'DIABETES', label: 'Diabetes %', category: 'health' },
-            { var: 'CORONARY.HEART.DISEASE', label: 'Coronary Heart Disease %', category: 'health' },
-            { var: 'OBESITY', label: 'Obesity %', category: 'health' },
-            { var: 'DEPRESSION', label: 'Depression %', category: 'health' }
+            { var: 'Pct_Owner_Occupied', label: 'Owner-Occupied %', category: 'housing' },
+            { var: 'Pct_Renter_Occupied', label: 'Renter-Occupied %', category: 'housing' },
+            { var: 'Pct_Vacant', label: 'Vacancy Rate %', category: 'housing' },
+            { var: 'Pct_Single_Family', label: 'Single-Family %', category: 'housing' },
+            { var: 'Pct_Multi_Family_5_Plus', label: 'Multi-Family 5+ %', category: 'housing' },
+            { var: 'Pct_All_HH_Cost_Burdened_30_Plus', label: 'Cost-Burdened 30%+ %', category: 'housing' },
+            { var: 'Pct_All_HH_Overcrowded', label: 'Overcrowded %', category: 'housing' },
+            { var: 'housing_units_per_sqmi', label: 'Housing Density (per sq mi)', category: 'housing' },
+            { var: 'Avg_Household_Size', label: 'Avg Household Size', category: 'housing' }
         ]
     };
 
@@ -2063,7 +2138,7 @@ class ScatterPlot {
         if (isFrozen) return;
         this.clearHighlight();
         clearHighlightInAllPlots();
-        showParishTotals();
+        showCountyTotals();
         clearMapHighlight();
         currentHoveredFeature = null;
         this.reorderBubbles();
@@ -2120,4 +2195,181 @@ function showError(message) {
     setTimeout(() => {
         if (document.body.contains(errorDiv)) document.body.removeChild(errorDiv);
     }, 5000);
+}
+
+// Veterans charts
+function createVetTotalChart(properties) {
+    const container = d3.select('#vet-total-chart');
+    const value = parseFloat(properties.Vet_Total_Veterans) || 0;
+    createLollipopChart(container, value, 'Vet_Total_Veterans', 'veterans');
+}
+
+function createVetPctAdultChart(properties) {
+    const container = d3.select('#vet-pct-adult-chart');
+    const value = parseFloat(properties.Pct_Veterans_Of_Adult_Pop) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_Of_Adult_Pop', 'veterans');
+}
+
+function createVetPer1000Chart(properties) {
+    const container = d3.select('#vet-per-1000-chart');
+    const value = parseFloat(properties.veterans_per_1000_pop) || 0;
+    createLollipopChart(container, value, 'veterans_per_1000_pop', 'veterans');
+}
+
+function createVetMaleChart(properties) {
+    const container = d3.select('#vet-male-chart');
+    const value = parseFloat(properties.Pct_Veterans_Male) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_Male', 'veterans');
+}
+
+function createVetFemaleChart(properties) {
+    const container = d3.select('#vet-female-chart');
+    const value = parseFloat(properties.Pct_Veterans_Female) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_Female', 'veterans');
+}
+
+function createVet18_34Chart(properties) {
+    const container = d3.select('#vet-18-34-chart');
+    const value = parseFloat(properties.Pct_Veterans_18_34) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_18_34', 'veterans');
+}
+
+function createVet35_54Chart(properties) {
+    const container = d3.select('#vet-35-54-chart');
+    const value = parseFloat(properties.Pct_Veterans_35_54) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_35_54', 'veterans');
+}
+
+function createVet55_64Chart(properties) {
+    const container = d3.select('#vet-55-64-chart');
+    const value = parseFloat(properties.Pct_Veterans_55_64) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_55_64', 'veterans');
+}
+
+function createVet65PlusChart(properties) {
+    const container = d3.select('#vet-65-plus-chart');
+    const value = parseFloat(properties.Pct_Veterans_65_Plus) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_65_Plus', 'veterans');
+}
+
+function createVetEmployedChart(properties) {
+    const container = d3.select('#vet-employed-chart');
+    const value = parseFloat(properties.Pct_Veterans_Employed) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_Employed', 'veterans');
+}
+
+function createVetUnemployedChart(properties) {
+    const container = d3.select('#vet-unemployed-chart');
+    const value = parseFloat(properties.Pct_Veterans_Unemployed) || 0;
+    createLollipopChart(container, value, 'Pct_Veterans_Unemployed', 'veterans');
+}
+
+function createVetMedianIncomeChart(properties) {
+    const container = d3.select('#vet-median-income-chart');
+    const value = parseFloat(properties.Vet_Median_Income_Veteran_Total) || 0;
+    createLollipopChart(container, value, 'Vet_Median_Income_Veteran_Total', 'veterans');
+}
+
+function createVetServiceDisabilityChart(properties) {
+    const container = d3.select('#vet-service-disability-chart');
+    const value = parseFloat(properties.Pct_Vet_With_Service_Disability) || 0;
+    createLollipopChart(container, value, 'Pct_Vet_With_Service_Disability', 'veterans');
+}
+
+// Economic Security charts
+function createWithInsuranceChart(properties) {
+    const container = d3.select('#with-insurance-chart');
+    const value = parseFloat(properties.Pct_With_Health_Insurance) || 0;
+    createLollipopChart(container, value, 'Pct_With_Health_Insurance', 'economic');
+}
+
+function createNoInsuranceChart(properties) {
+    const container = d3.select('#no-insurance-chart');
+    const value = parseFloat(properties.Pct_No_Health_Insurance) || 0;
+    createLollipopChart(container, value, 'Pct_No_Health_Insurance', 'economic');
+}
+
+function createSNAPChart(properties) {
+    const container = d3.select('#snap-chart');
+    const value = parseFloat(properties.Pct_HH_SNAP) || 0;
+    createLollipopChart(container, value, 'Pct_HH_SNAP', 'economic');
+}
+
+function createPublicAssistChart(properties) {
+    const container = d3.select('#public-assist-chart');
+    const value = parseFloat(properties.Pct_HH_Public_Assistance) || 0;
+    createLollipopChart(container, value, 'Pct_HH_Public_Assistance', 'economic');
+}
+
+function createBachelorsPlusChart(properties) {
+    const container = d3.select('#bachelors-plus-chart');
+    const value = parseFloat(properties.Pct_Bachelors_Plus) || 0;
+    createLollipopChart(container, value, 'Pct_Bachelors_Plus', 'economic');
+}
+
+function createLessThanHSChart(properties) {
+    const container = d3.select('#less-than-hs-chart');
+    const value = parseFloat(properties.Pct_Less_Than_HS) || 0;
+    createLollipopChart(container, value, 'Pct_Less_Than_HS', 'economic');
+}
+
+function createLongCommuteChart(properties) {
+    const container = d3.select('#long-commute-chart');
+    const value = parseFloat(properties.Pct_Commute_60_Plus) || 0;
+    createLollipopChart(container, value, 'Pct_Commute_60_Plus', 'economic');
+}
+
+function createNoVehicleChart(properties) {
+    const container = d3.select('#no-vehicle-chart');
+    const value = parseFloat(properties.Pct_HH_No_Vehicle) || 0;
+    createLollipopChart(container, value, 'Pct_HH_No_Vehicle', 'economic');
+}
+
+// Housing charts
+function createHousingUnitsChart(properties) {
+    const container = d3.select('#housing-units-chart');
+    const value = parseFloat(properties.Total_Housing_Units) || 0;
+    createLollipopChart(container, value, 'Total_Housing_Units', 'housing');
+}
+
+function createOwnerPctChart(properties) {
+    const container = d3.select('#owner-pct-chart');
+    const value = parseFloat(properties.Pct_Owner_Occupied) || 0;
+    createLollipopChart(container, value, 'Pct_Owner_Occupied', 'housing');
+}
+
+function createVacancyRateChart(properties) {
+    const container = d3.select('#vacancy-rate-chart');
+    const value = parseFloat(properties.Pct_Vacant) || 0;
+    createLollipopChart(container, value, 'Pct_Vacant', 'housing');
+}
+
+function createMultiFamilyChart(properties) {
+    const container = d3.select('#multi-family-chart');
+    const value = parseFloat(properties.Pct_Multi_Family_5_Plus) || 0;
+    createLollipopChart(container, value, 'Pct_Multi_Family_5_Plus', 'housing');
+}
+
+function createRentBurdenRatioChart(properties) {
+    const container = d3.select('#rent-burden-ratio-chart');
+    const value = parseFloat(properties.Rent_Burden_Ratio) || 0;
+    createLollipopChart(container, value, 'Rent_Burden_Ratio', 'housing');
+}
+
+function createPriceIncomeRatioChart(properties) {
+    const container = d3.select('#price-income-ratio-chart');
+    const value = parseFloat(properties.Price_To_Income_Ratio) || 0;
+    createLollipopChart(container, value, 'Price_To_Income_Ratio', 'housing');
+}
+
+function createDensityChart(properties) {
+    const container = d3.select('#density-chart');
+    const value = parseFloat(properties.housing_units_per_sqmi) || 0;
+    createLollipopChart(container, value, 'housing_units_per_sqmi', 'housing');
+}
+
+function createHouseholdSizeChart(properties) {
+    const container = d3.select('#household-size-chart');
+    const value = parseFloat(properties.Avg_Household_Size) || 0;
+    createLollipopChart(container, value, 'Avg_Household_Size', 'housing');
 }
